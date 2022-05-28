@@ -1,0 +1,4 @@
+/home/ogrob/final_diploma/cmake-build-release/CMakeFiles/rebuild_cache.dir
+/home/ogrob/final_diploma/cmake-build-release/CMakeFiles/edit_cache.dir
+/home/ogrob/final_diploma/cmake-build-release/CMakeFiles/diploma.dir
+/home/ogrob/final_diploma/cmake-build-release/CMakeFiles/oganyan_lambda_calc.dir
