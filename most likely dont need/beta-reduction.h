@@ -10,7 +10,7 @@
 #include <set>
 #include <stack>
 #include "correct_syntax_check.h"
-#include "syntax-correct.h"
+#include "../parse-syntax.h"
 
 
 const int lambda = -1;

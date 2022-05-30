@@ -1,4 +1,4 @@
-/home/ogrob/final_diploma/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/ogrob/final_diploma/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/ogrob/final_diploma/cmake-build-debug/CMakeFiles/diploma.dir
-/home/ogrob/final_diploma/cmake-build-debug/CMakeFiles/oganyan_lambda_calc.dir
+/home/ogrob/diplom/Diploma/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/ogrob/diplom/Diploma/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/ogrob/diplom/Diploma/cmake-build-debug/CMakeFiles/diploma.dir
+/home/ogrob/diplom/Diploma/cmake-build-debug/CMakeFiles/oganyan_lambda_calc.dir

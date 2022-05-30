@@ -1,4 +1,4 @@
-/home/ogrob/clion_linux/21/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" /home/ogrob/final_diploma
+/home/ogrob/clion_linux/21/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/home/ogrob/clion_linux/21/bin/ninja/linux/ninja -G Ninja /home/ogrob/diplom/Diploma
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/ogrob/final_diploma/cmake-build-release
+-- Build files have been written to: /home/ogrob/diplom/Diploma/cmake-build-release

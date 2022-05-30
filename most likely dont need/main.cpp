@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include "beta-reduction.h"
-#include "../new_count_terms.h"
+#include "../CountOfTerms.h"
 #include "../TermNode.h"
 
 //#define Show_Steps_At_Tests

@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <string>
-#include "most likely dont need/beta-reduction.h"
-#include "new_count_terms.h"
+#include "beta-reduction.h"
+#include "CountOfTerms.h"
 
 //#define Show_Steps_At_Tests
 #define Show_Steps_At_Interpreter
