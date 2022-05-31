@@ -124,6 +124,12 @@ class Var : public TermNode {
 public:
     Var() = default;
     Var(size_t begin_idx, size_t end_idx) : TermNode(TermType::kVar, begin_idx, end_idx){};
+    Var(size_t begin_idx, size_t end_idx,
+        const std::string &source_term) : TermNode(TermType::kVar, begin_idx, end_idx, source_term){};
+    Var(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kVar, child_type, begin_idx, end_idx){};
+    Var(ChildType child_type, size_t begin_idx,
+        size_t end_idx, const std::string &source_term) : TermNode(TermType::kVar, child_type,
+                                                                   begin_idx, end_idx, source_term){};
 };
 
 class Abs : public TermNode {
@@ -133,7 +139,12 @@ private:
 public:
     Abs() = default;
     Abs(size_t begin_idx, size_t end_idx) : TermNode(TermType::kAbs, begin_idx, end_idx){};
-
+    Abs(size_t begin_idx, size_t end_idx,
+        const std::string &source_term) : TermNode(TermType::kAbs, begin_idx, end_idx, source_term){};
+    Abs(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kAbs, child_type, begin_idx, end_idx){};
+    Abs(ChildType child_type, size_t begin_idx,
+        size_t end_idx, const std::string &source_term) : TermNode(TermType::kAbs, child_type,
+                                                                   begin_idx, end_idx, source_term){};
 
     const std::shared_ptr<TermNode> &GetDown() const {
         return down_;
@@ -153,7 +164,12 @@ private:
 public:
     App() = default;
     App(size_t begin_idx, size_t end_idx) : TermNode(TermType::kApp, begin_idx, end_idx){};
-
+    App(size_t begin_idx, size_t end_idx,
+        const std::string &source_term) : TermNode(TermType::kApp, begin_idx, end_idx, source_term){};
+    App(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kApp, child_type, begin_idx, end_idx){};
+    App(ChildType child_type, size_t begin_idx,
+        size_t end_idx, const std::string &source_term) : TermNode(TermType::kApp, child_type,
+                                                                   begin_idx, end_idx, source_term){};
 
     const std::shared_ptr<TermNode> &GetLeft() const {
         return left_;

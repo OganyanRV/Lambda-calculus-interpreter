@@ -19,6 +19,7 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 //    std::cout << correct_form_term << std::endl;
 
     AbstractSyntaxTree tree(correct_form_term);
+    int kek = 0;
     return {};
 }
 #endif//OGANYAN_LAMBDA_CALC_BETA_REDUCTION_H
