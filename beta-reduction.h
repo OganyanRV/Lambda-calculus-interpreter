@@ -19,6 +19,9 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 //    std::cout << correct_form_term << std::endl;
 
     AbstractSyntaxTree tree(correct_form_term);
+
+    std::cout<<tree.ExprToString(tree.GetRoot())<< std::endl;
+    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
     int kek = 0;
     return {};
 }

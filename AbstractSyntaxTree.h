@@ -219,15 +219,13 @@ public:
             auto cur = std::static_pointer_cast<Var>(from);
             char cur_var = this->expression_[cur->begin_idx_];
 
-            auto find = [](const std::vector<char> &bound_vars, char var) -> int8_t {
-                for (size_t idx = bound_vars.size() - 1; idx >= 0; --idx) {
-                    if (bound_vars[idx] == var) {
+            auto find = [](const std::vector<char> &bound_vars, char var) -> int64_t {
+                for (int64_t idx = bound_vars.size() - 1; idx >= 0; --idx) {
+                    if (bound_vars[static_cast<size_t>(idx)] == var) {
                         return idx;
                     }
-                    if (!idx) {
-                        return -1;
-                    }
                 }
+                return -1;
             };
 
             auto shift = find(bound_vars, cur_var);
@@ -241,6 +239,44 @@ public:
                 cur->SetIsFree(false);
             }
         }
+    }
+
+    std::string ExprToString(const std::shared_ptr<TermNode> &from) {
+        if (from->type_ == TermType::kApp) {
+            auto cur = std::static_pointer_cast<App>(from);
+            auto left_str = ExprToString(cur->GetLeft());
+            auto right_str = ExprToString(cur->GetRight());
+            return "(" + left_str + " " + right_str + ")";
+        } else if (from->type_ == TermType::kAbs) {
+            auto cur = std::static_pointer_cast<Abs>(from);
+            auto down_str = ExprToString(cur->GetDown());
+            return "(" + cur->GetTerm() + " " + "(" + down_str + ")" + ")";
+        } else if (from->type_ == TermType::kVar) {
+            auto cur = std::static_pointer_cast<Var>(from);
+            return cur->GetTerm();
+        }
+        return {};
+    }
+
+    std::string ExprToStringDB(const std::shared_ptr<TermNode> &from) {
+        if (from->type_ == TermType::kApp) {
+            auto cur = std::static_pointer_cast<App>(from);
+            auto left_str = ExprToStringDB(cur->GetLeft());
+            auto right_str = ExprToStringDB(cur->GetRight());
+            return "(" + left_str + " " + right_str + ")";
+        } else if (from->type_ == TermType::kAbs) {
+            auto cur = std::static_pointer_cast<Abs>(from);
+            auto down_str = ExprToStringDB(cur->GetDown());
+            return "(" + std::string("\\") + std::string(" ") + "(" + down_str + ")" + ")";
+        } else if (from->type_ == TermType::kVar) {
+            auto cur = std::static_pointer_cast<Var>(from);
+            return std::to_string(cur->GetDeBruijnIndex());
+        }
+        return {};
+    }
+
+    const std::shared_ptr<TermNode> &GetRoot() const {
+        return root_;
     }
 };
 #endif//OGANYAN_LAMBDA_CALC_ABSTRACTSYNTAXTREE_H
