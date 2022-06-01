@@ -140,7 +140,7 @@ int main() {
 
 
         if (input == "exit") {
-            return 0;
+            break;
         }
 
         ProcessRequest(input);

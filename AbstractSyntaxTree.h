@@ -6,6 +6,7 @@ class AbstractSyntaxTree {
 private:
     std::shared_ptr<TermNode> root_;
     std::string expression_;
+    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
     //    std::vector<char> expression_vec;
 
     size_t FindClosingBracket(size_t begin_idx, size_t end_idx) {
@@ -106,6 +107,7 @@ public:
     AbstractSyntaxTree(const std::string expression) : expression_(expression) {
         root_ = std::make_shared<TermNode>(0, expression_.size() - 1, expression_);
         BuildTree(root_);
+        CalculateDeBruijnNotation(root_);
     }
 
     void BuildTree(std::shared_ptr<TermNode> &from) {
@@ -128,9 +130,9 @@ public:
             if (terms.first == TermType::kApp) {
                 auto current_node = std::make_shared<App>();
                 auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
-                                                      terms.second[0], terms.second[1], expression_);
+                                                           terms.second[0], terms.second[1], expression_);
                 auto right_app = std::make_shared<TermNode>(ChildType::kRight,
-                                                           terms.second[2], terms.second[3], expression_);
+                                                            terms.second[2], terms.second[3], expression_);
                 left_app->parent_ = current_node;
                 right_app->parent_ = current_node;
                 current_node->SetLeft(left_app);
@@ -147,12 +149,10 @@ public:
                 if (from->child_type_ == ChildType::kDown) {
                     auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
                     parent->SetDown(current_node);
-                }
-                else if (from->child_type_ == ChildType::kLeft) {
+                } else if (from->child_type_ == ChildType::kLeft) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetLeft(current_node);
-                }
-                else if (from->child_type_ == ChildType::kRight) {
+                } else if (from->child_type_ == ChildType::kRight) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetRight(current_node);
                 }
@@ -169,12 +169,10 @@ public:
                 if (from->child_type_ == ChildType::kDown) {
                     auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
                     parent->SetDown(current_node);
-                }
-                else if (from->child_type_ == ChildType::kLeft) {
+                } else if (from->child_type_ == ChildType::kLeft) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetLeft(current_node);
-                }
-                else if (from->child_type_ == ChildType::kRight) {
+                } else if (from->child_type_ == ChildType::kRight) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetRight(current_node);
                 }
@@ -195,17 +193,52 @@ public:
                 if (from->child_type_ == ChildType::kDown) {
                     auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
                     parent->SetDown(current_node);
-                }
-                else if (from->child_type_ == ChildType::kLeft) {
+                } else if (from->child_type_ == ChildType::kLeft) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetLeft(current_node);
-                }
-                else if (from->child_type_ == ChildType::kRight) {
+                } else if (from->child_type_ == ChildType::kRight) {
                     auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                     parent->SetRight(current_node);
                 }
                 BuildTree(left_app);
                 BuildTree(right_app);
+            }
+        }
+    }
+
+    void CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars = {}) {
+        if (from->type_ == TermType::kApp) {
+            auto cur = std::static_pointer_cast<App>(from);
+            CalculateDeBruijnNotation(cur->GetLeft(), bound_vars);
+            CalculateDeBruijnNotation(cur->GetRight(), bound_vars);
+        } else if (from->type_ == TermType::kAbs) {
+            auto cur = std::static_pointer_cast<Abs>(from);
+            bound_vars.push_back(this->expression_[cur->begin_idx_ + 1]);
+            CalculateDeBruijnNotation(cur->GetDown(), bound_vars);
+        } else if (from->type_ == TermType::kVar) {
+            auto cur = std::static_pointer_cast<Var>(from);
+            char cur_var = this->expression_[cur->begin_idx_];
+
+            auto find = [](const std::vector<char> &bound_vars, char var) -> int8_t {
+                for (size_t idx = bound_vars.size() - 1; idx >= 0; --idx) {
+                    if (bound_vars[idx] == var) {
+                        return idx;
+                    }
+                    if (!idx) {
+                        return -1;
+                    }
+                }
+            };
+
+            auto shift = find(bound_vars, cur_var);
+            if (shift == -1) {
+                //  free var
+                cur->SetDeBruijnIndex(bound_vars.size() + (cur_var - 'a'));
+                cur->SetIsFree(true);
+            } else {
+                //  bound var
+                cur->SetDeBruijnIndex(bound_vars.size() - shift - 1);
+                cur->SetIsFree(false);
             }
         }
     }

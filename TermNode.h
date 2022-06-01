@@ -118,7 +118,8 @@ public:
 };
 
 class Var : public TermNode {
-    //    size_t de_brujne_index_;
+    size_t de_bruijn_index_;
+    bool is_free_ = true;
     //    size_t alpha_conversion_count_;
 
 public:
@@ -130,6 +131,19 @@ public:
     Var(ChildType child_type, size_t begin_idx,
         size_t end_idx, const std::string &source_term) : TermNode(TermType::kVar, child_type,
                                                                    begin_idx, end_idx, source_term){};
+
+    size_t GetDeBruijnIndex() const {
+        return de_bruijn_index_;
+    }
+    bool IsFree() const {
+        return is_free_;
+    }
+    void SetDeBruijnIndex(size_t de_bruijn_index) {
+        de_bruijn_index_ = de_bruijn_index;
+    }
+    void SetIsFree(bool is_free) {
+        is_free_ = is_free;
+    }
 };
 
 class Abs : public TermNode {
