@@ -203,10 +203,24 @@ CMakeFiles/diploma.dir/new_main.cpp.o: ../new_main.cpp \
   /usr/include/c++/9/bits/atomic_base.h \
   /usr/include/c++/9/bits/atomic_lockfree_defines.h \
   /usr/include/c++/9/backward/auto_ptr.h \
+  /usr/include/c++/9/algorithm \
+  /usr/include/c++/9/bits/stl_algo.h \
+  /usr/include/c++/9/bits/algorithmfwd.h \
+  /usr/include/c++/9/bits/stl_heap.h \
+  /usr/include/c++/9/bits/uniform_int_dist.h \
+  /usr/include/c++/9/limits \
   ../CountOfTerms.h
 
 
 ../CountOfTerms.h:
+
+/usr/include/c++/9/limits:
+
+/usr/include/c++/9/bits/uniform_int_dist.h:
+
+/usr/include/c++/9/bits/stl_heap.h:
+
+/usr/include/c++/9/bits/stl_algo.h:
 
 /usr/include/c++/9/backward/auto_ptr.h:
 
@@ -229,6 +243,8 @@ CMakeFiles/diploma.dir/new_main.cpp.o: ../new_main.cpp \
 /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h:
 
 /usr/include/ctype.h:
+
+/usr/include/c++/9/algorithm:
 
 /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h:
 
@@ -377,6 +393,8 @@ CMakeFiles/diploma.dir/new_main.cpp.o: ../new_main.cpp \
 /usr/include/x86_64-linux-gnu/c++/9/bits/c++config.h:
 
 /usr/include/c++/9/streambuf:
+
+/usr/include/c++/9/bits/algorithmfwd.h:
 
 /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h:
 

@@ -1,12 +1,14 @@
 #ifndef OGANYAN_LAMBDA_CALC_ABSTRACTSYNTAXTREE_H
 #define OGANYAN_LAMBDA_CALC_ABSTRACTSYNTAXTREE_H
 #include "TermNode.h"
+#include <algorithm>
 
 class AbstractSyntaxTree {
 private:
     std::shared_ptr<TermNode> root_;
     std::string expression_;
-    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
+    std::vector<char> name_context_;
+//    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
     //    std::vector<char> expression_vec;
 
     size_t FindClosingBracket(size_t begin_idx, size_t end_idx) {
@@ -231,7 +233,14 @@ public:
             auto shift = find(bound_vars, cur_var);
             if (shift == -1) {
                 //  free var
-                cur->SetDeBruijnIndex(bound_vars.size() + (cur_var - 'a'));
+                auto var_it = std::find(name_context_.begin(), name_context_.end(), cur_var);
+                if ( var_it == name_context_.end()) {
+                    name_context_.push_back(cur_var);
+                    cur->SetDeBruijnIndex(bound_vars.size() + name_context_.size() - 1);
+                } else {
+                    size_t pos =  var_it - name_context_.begin();
+                    cur->SetDeBruijnIndex(bound_vars.size() + pos);
+                }
                 cur->SetIsFree(true);
             } else {
                 //  bound var
