@@ -96,6 +96,9 @@ public:
     size_t GetEndIdx() const {
         return end_idx_;
     }
+    ChildType GetChildType() const {
+        return child_type_;
+    }
     const std::weak_ptr<TermNode> &GetParent() const {
         return parent_;
     }
@@ -114,6 +117,12 @@ public:
     void SetTerm(const std::string &term) {
         term_ = term;
     }
+
+    void SetChildType(ChildType child_type) {
+        child_type_ = child_type;
+    }
+
+
     virtual ~TermNode() = default;
 };
 
@@ -164,6 +173,10 @@ public:
         return down_;
     }
 
+    std::shared_ptr<TermNode> &GetDown() {
+        return down_;
+    }
+
 
     void SetDown(const std::shared_ptr<TermNode> &down) {
         down_ = down;
@@ -190,6 +203,14 @@ public:
     }
 
     const std::shared_ptr<TermNode> &GetRight() const {
+        return right_;
+    }
+
+    std::shared_ptr<TermNode> &GetLeft() {
+        return left_;
+    }
+
+    std::shared_ptr<TermNode> &GetRight() {
         return right_;
     }
 

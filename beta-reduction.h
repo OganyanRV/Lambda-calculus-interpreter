@@ -22,6 +22,8 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 
     std::cout<<tree.ExprToString(tree.GetRoot())<< std::endl;
     std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+
+    auto lmao = tree.CopySubTree(tree.GetRoot());
     int kek = 0;
     return {};
 }

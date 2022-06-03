@@ -8,7 +8,7 @@ private:
     std::shared_ptr<TermNode> root_;
     std::string expression_;
     std::vector<char> name_context_;
-//    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
+    //    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
     //    std::vector<char> expression_vec;
 
     size_t FindClosingBracket(size_t begin_idx, size_t end_idx) {
@@ -234,11 +234,11 @@ public:
             if (shift == -1) {
                 //  free var
                 auto var_it = std::find(name_context_.begin(), name_context_.end(), cur_var);
-                if ( var_it == name_context_.end()) {
+                if (var_it == name_context_.end()) {
                     name_context_.push_back(cur_var);
                     cur->SetDeBruijnIndex(bound_vars.size() + name_context_.size() - 1);
                 } else {
-                    size_t pos =  var_it - name_context_.begin();
+                    size_t pos = var_it - name_context_.begin();
                     cur->SetDeBruijnIndex(bound_vars.size() + pos);
                 }
                 cur->SetIsFree(true);
@@ -250,7 +250,104 @@ public:
         }
     }
 
-    std::string ExprToString(const std::shared_ptr<TermNode> &from) {
+    void MakeReductionStep(std::shared_ptr<TermNode> &from) {
+        auto cur = std::static_pointer_cast<App>(from);
+        auto left_str = ExprToString(cur->GetLeft());
+        auto right_str = ExprToString(cur->GetRight());
+    }
+
+    void Shift(std::shared_ptr<TermNode> &from, size_t d_pos, size_t cutoff) {
+        if (from->type_ == TermType::kVar) {
+            auto cur = std::static_pointer_cast<Var>(from);
+            if (cur->GetDeBruijnIndex() >= cutoff) {
+                cur->SetDeBruijnIndex(cur->GetDeBruijnIndex() + d_pos);
+            }
+        } else if (from->type_ == TermType::kAbs) {
+            auto cur = std::static_pointer_cast<Abs>(from);
+            Shift(cur->GetDown(), d_pos, cutoff + 1);
+
+        } else if (from->type_ == TermType::kApp) {
+            auto cur = std::static_pointer_cast<App>(from);
+            Shift(cur->GetLeft(), d_pos, cutoff);
+            Shift(cur->GetRight(), d_pos, cutoff);
+        }
+    }
+
+    void Substitution(std::shared_ptr<TermNode> &term_to_reduce, std::shared_ptr<TermNode> &value, size_t j) {
+        if (term_to_reduce->type_ == TermType::kVar) {
+            auto cur = std::static_pointer_cast<Var>(term_to_reduce);
+            if (cur->GetDeBruijnIndex() == j) {
+                auto parent = cur->GetParent().lock();
+                auto new_value = CopySubTree(value);
+                if (parent->type_ == TermType::kAbs) {
+                    auto parent_downcast = std::static_pointer_cast<Abs>(parent);
+                    parent_downcast->SetDown(new_value);
+                } else if (parent->type_ == TermType::kApp) {
+                    auto parent_downcast = std::static_pointer_cast<App>(parent);
+                    if (cur->GetChildType() == ChildType::kLeft) {
+                        parent_downcast->SetLeft(new_value);
+                    } else  if (cur->GetChildType() == ChildType::kRight) {
+                        parent_downcast->SetRight(new_value);
+                    }
+                }
+            }
+        } else if (term_to_reduce->type_ == TermType::kAbs) {
+            auto cur = std::static_pointer_cast<Abs>(term_to_reduce);
+            auto new_value = CopySubTree(value);
+            Shift(new_value, 1, 0);
+            Substitution(cur->GetDown(), new_value, j+1);
+        } else if (term_to_reduce->type_ == TermType::kApp) {
+            auto cur = std::static_pointer_cast<App>(term_to_reduce);
+            Substitution(cur->GetLeft(), value, j);
+            Substitution(cur->GetRight(), value, j);
+        }
+    }
+
+    std::shared_ptr<TermNode> CopySubTree(const std::shared_ptr<TermNode> &from) {
+        std::shared_ptr<TermNode> copied_sub_tree;
+        CopySubTreeRecursive(copied_sub_tree, from);
+        return copied_sub_tree;
+    }
+
+    void CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_node, const std::shared_ptr<TermNode> &from) {
+        if (from->type_ == TermType::kVar) {
+            copy_node = std::make_shared<Var>( from->GetChildType(), from->GetBeginIdx(),
+                                  from->GetEndIdx(), this->expression_);
+            auto cur_copy_node = std::static_pointer_cast<Var>(copy_node);
+            auto cur_source_node = std::static_pointer_cast<Var>(from);
+            if (!cur_source_node->GetParent().expired()) {
+                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
+            }
+            cur_copy_node->SetIsFree(cur_source_node->IsFree());
+            cur_copy_node->SetDeBruijnIndex(cur_source_node->GetDeBruijnIndex());
+        } else if (from->type_ == TermType::kAbs) {
+            copy_node = std::make_shared<Abs>( from->GetChildType(), from->GetBeginIdx(),
+                                              from->GetEndIdx(), this->expression_);
+            auto cur_copy_node = std::static_pointer_cast<Abs>(copy_node);
+            auto cur_source_node = std::static_pointer_cast<Abs>(from);
+            if (!cur_source_node->GetParent().expired()) {
+                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
+            }
+            cur_copy_node->SetDown(std::shared_ptr<TermNode>(cur_source_node->GetDown()));
+            CopySubTreeRecursive(cur_copy_node->GetDown(), cur_source_node->GetDown());
+        } else if (from->type_ == TermType::kApp) {
+            copy_node = std::make_shared<App>( from->GetChildType(), from->GetBeginIdx(),
+                                              from->GetEndIdx(), this->expression_);
+            auto cur_copy_node = std::static_pointer_cast<App>(copy_node);
+            auto cur_source_node = std::static_pointer_cast<App>(from);
+            if (!cur_source_node->GetParent().expired()) {
+                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
+            }
+            cur_copy_node->SetLeft(std::shared_ptr<TermNode>(cur_source_node->GetLeft()));
+            cur_copy_node->SetRight(std::shared_ptr<TermNode>(cur_source_node->GetRight()));
+            CopySubTreeRecursive(cur_copy_node->GetLeft(), cur_source_node->GetLeft());
+            CopySubTreeRecursive(cur_copy_node->GetRight(), cur_source_node->GetRight());
+        }
+    }
+
+
+    std::string
+    ExprToString(const std::shared_ptr<TermNode> &from) {
         if (from->type_ == TermType::kApp) {
             auto cur = std::static_pointer_cast<App>(from);
             auto left_str = ExprToString(cur->GetLeft());
@@ -288,4 +385,6 @@ public:
         return root_;
     }
 };
+
+
 #endif//OGANYAN_LAMBDA_CALC_ABSTRACTSYNTAXTREE_H
