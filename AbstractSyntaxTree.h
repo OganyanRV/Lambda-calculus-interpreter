@@ -252,11 +252,32 @@ public:
 
     void MakeReductionStep(std::shared_ptr<TermNode> &from) {
         auto cur = std::static_pointer_cast<App>(from);
-        auto left_str = ExprToString(cur->GetLeft());
-        auto right_str = ExprToString(cur->GetRight());
+        auto term_to_reduce = std::static_pointer_cast<Abs>(cur->GetLeft());
+        auto value = cur->GetRight();
+        Shift(value, 1, 0);
+        Substitution(term_to_reduce->GetDown(), value, 0);
+        int kok = 0;
+        Shift(term_to_reduce->GetDown(), -1, 0);
+        if (from->GetParent().expired()) {
+            root_ = term_to_reduce->GetDown();
+        } else {
+            if (from->GetParent().lock()->type_ == TermType::kAbs) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
+                parent->SetDown(term_to_reduce->GetDown());
+            } else if (from->GetParent().lock()->type_ == TermType::kApp) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                if (from->child_type_ == ChildType::kLeft) {
+                    parent->SetLeft((term_to_reduce->GetDown()));
+                }
+                else if (from->child_type_ == ChildType::kRight){
+                    parent->SetRight((term_to_reduce->GetDown()));
+                }
+            }
+
+        }
     }
 
-    void Shift(std::shared_ptr<TermNode> &from, size_t d_pos, size_t cutoff) {
+    void Shift(std::shared_ptr<TermNode> &from, int64_t d_pos, int64_t cutoff) {
         if (from->type_ == TermType::kVar) {
             auto cur = std::static_pointer_cast<Var>(from);
             if (cur->GetDeBruijnIndex() >= cutoff) {
@@ -382,6 +403,10 @@ public:
     }
 
     const std::shared_ptr<TermNode> &GetRoot() const {
+        return root_;
+    }
+
+    std::shared_ptr<TermNode> &GetRoot() {
         return root_;
     }
 };
