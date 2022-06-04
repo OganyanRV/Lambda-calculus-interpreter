@@ -14,18 +14,39 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 
     //  Make appropriate form of term
     auto correct_form_term = MakeCorrectForm(term);
-    std::cout << correct_form_term << std::endl;
+//    std::cout << correct_form_term << std::endl;
 //    correct_form_term = RemoveSpaces(correct_form_term);
 //    std::cout << correct_form_term << std::endl;
 
     AbstractSyntaxTree tree(correct_form_term);
+//
+//    std::cout<<tree.ExprToString(tree.GetRoot())<< std::endl;
+//    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+// Test
 
-    std::cout<<tree.ExprToString(tree.GetRoot())<< std::endl;
-    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+//    auto lmao = tree.CopySubTree(tree.GetRoot());
+    auto tree1 = tree;
+//    tree.MakeReductionStep(tree.GetRoot());
+//    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+    std::cout<<"Applicative strat: "<<std::endl;
+    auto eager = tree1.ApplicativeBetaReduction();
+    for (auto& step : eager) {
+        std::cout<<step<<std::endl;
+    }
 
-    auto lmao = tree.CopySubTree(tree.GetRoot());
-    tree.MakeReductionStep(tree.GetRoot());
-    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+    auto tree2 = tree1;
+    std::cout<<"Lazy strat: "<<std::endl;
+    auto lazy = tree2.LazyBetaReduction();
+    for (auto& step : lazy) {
+        std::cout<<step<<std::endl;
+    }
+
+    auto tree3 = tree1;
+    std::cout<<"Normal strat: "<<std::endl;
+    auto norm = tree3.NormalBetaReduction();
+    for (auto& step : norm) {
+        std::cout<<step<<std::endl;
+    }
     int kek = 0;
     return {};
 }

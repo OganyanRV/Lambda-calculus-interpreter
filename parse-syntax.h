@@ -231,13 +231,13 @@ std::string RemoveSpaces(const std::string &term) {
 //  Makes appropriate form of expression
 std::string MakeCorrectForm(const std::string &term) {
     std::string corrected_term{term};
-    std::cout << "Source expr: " << corrected_term << "\n";
+//    std::cout << "Source expr: " << corrected_term << "\n";
     corrected_term = PutBracketsAroundLambdaAbstractions(corrected_term);
-    std::cout << "Expr after putting brackets arround abstractions: " << corrected_term << "\n";
+//    std::cout << "Expr after putting brackets arround abstractions: " << corrected_term << "\n";
     corrected_term = PutBracketsAroundSubTermsInLambdaAbstractions(corrected_term);
-    std::cout << "Expr after putting brackets arround subterm in abstractions: " << corrected_term << "\n";
+//    std::cout << "Expr after putting brackets arround subterm in abstractions: " << corrected_term << "\n";
     corrected_term = PutBracketsInApplications(corrected_term);
-    std::cout << "Expr after putting brackets in applications: " << corrected_term << "\n";
+//    std::cout << "Expr after putting brackets in applications: " << corrected_term << "\n";
     // Maybe make function for removing extra brackets
     return corrected_term;
 }

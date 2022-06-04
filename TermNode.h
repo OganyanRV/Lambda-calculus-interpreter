@@ -20,12 +20,14 @@ class TermNode {
 protected:
     TermType type_ = TermType::kApp;
     ChildType child_type_ = ChildType::kDown;
-    size_t begin_idx_, end_idx_;
+    size_t begin_idx_ = 0;
+    size_t end_idx_ = 0;
     std::weak_ptr<TermNode> parent_;
     std::string term_;
 
 public:
     TermNode() = default;
+    TermNode(ChildType child_type) : child_type_(child_type){};
     TermNode(size_t begin_idx, size_t end_idx) : begin_idx_(begin_idx),
                                                  end_idx_(end_idx){};
     TermNode(TermType type, size_t begin_idx, size_t end_idx) : type_(type),
@@ -190,6 +192,7 @@ private:
 
 public:
     App() = default;
+    App(ChildType child_type) : TermNode(child_type){};
     App(size_t begin_idx, size_t end_idx) : TermNode(TermType::kApp, begin_idx, end_idx){};
     App(size_t begin_idx, size_t end_idx,
         const std::string &source_term) : TermNode(TermType::kApp, begin_idx, end_idx, source_term){};
