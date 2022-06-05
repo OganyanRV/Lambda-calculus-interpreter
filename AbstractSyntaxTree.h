@@ -291,42 +291,44 @@ private:
     }
 
     std::shared_ptr<TermNode> CopySubTree(const std::shared_ptr<TermNode> &from) const{
-        std::shared_ptr<TermNode> copied_sub_tree;
+        std::shared_ptr<TermNode> copied_sub_tree = std::shared_ptr<TermNode>(from);
         CopySubTreeRecursive(copied_sub_tree, from);
         return copied_sub_tree;
     }
 
     void CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_node, const std::shared_ptr<TermNode> &from) const{
         if (from->type_ == TermType::kVar) {
+            auto parent = copy_node->GetParent();
             copy_node = std::make_shared<Var>(from->GetChildType(), from->GetBeginIdx(),
                                               from->GetEndIdx(), this->expression_);
             auto cur_copy_node = std::static_pointer_cast<Var>(copy_node);
             auto cur_source_node = std::static_pointer_cast<Var>(from);
-            if (!cur_source_node->GetParent().expired()) {
-                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
-            }
+            cur_copy_node->SetParent(parent);
             cur_copy_node->SetIsFree(cur_source_node->IsFree());
             cur_copy_node->SetDeBruijnIndex(cur_source_node->GetDeBruijnIndex());
         } else if (from->type_ == TermType::kAbs) {
+            auto parent = copy_node->GetParent();
             copy_node = std::make_shared<Abs>(from->GetChildType(), from->GetBeginIdx(),
                                               from->GetEndIdx(), this->expression_);
             auto cur_copy_node = std::static_pointer_cast<Abs>(copy_node);
             auto cur_source_node = std::static_pointer_cast<Abs>(from);
-            if (!cur_source_node->GetParent().expired()) {
-                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
-            }
+
+            cur_copy_node->SetParent(parent);
             cur_copy_node->SetDown(std::shared_ptr<TermNode>(cur_source_node->GetDown()));
+            cur_copy_node->GetDown()->SetParent(cur_copy_node);
             CopySubTreeRecursive(cur_copy_node->GetDown(), cur_source_node->GetDown());
         } else if (from->type_ == TermType::kApp) {
+            auto parent = copy_node->GetParent();
             copy_node = std::make_shared<App>(from->GetChildType(), from->GetBeginIdx(),
                                               from->GetEndIdx(), this->expression_);
             auto cur_copy_node = std::static_pointer_cast<App>(copy_node);
             auto cur_source_node = std::static_pointer_cast<App>(from);
-            if (!cur_source_node->GetParent().expired()) {
-                cur_copy_node->SetParent(std::weak_ptr<TermNode>(cur_source_node->GetParent()));
-            }
+
+            cur_copy_node->SetParent(parent);
             cur_copy_node->SetLeft(std::shared_ptr<TermNode>(cur_source_node->GetLeft()));
             cur_copy_node->SetRight(std::shared_ptr<TermNode>(cur_source_node->GetRight()));
+            cur_copy_node->GetLeft()->SetParent(cur_copy_node);
+            cur_copy_node->GetRight()->SetParent(cur_copy_node);
             CopySubTreeRecursive(cur_copy_node->GetLeft(), cur_source_node->GetLeft());
             CopySubTreeRecursive(cur_copy_node->GetRight(), cur_source_node->GetRight());
         }
@@ -379,6 +381,8 @@ private:
                     return FindRedexInNormalStrategy(right_term);
                 }
             }
+        } else if (from->GetType() == TermType::kAbs) {
+            return FindRedexInNormalStrategy(std::static_pointer_cast<Abs>(from)->GetDown());
         }
         return {false, {}};
     }

@@ -25,23 +25,23 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 // Test
 
 //    auto lmao = tree.CopySubTree(tree.GetRoot());
-    auto tree1 = tree;
 //    tree.MakeReductionStep(tree.GetRoot());
 //    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
+    auto tree1 = tree;
     std::cout<<"Applicative strat: "<<std::endl;
     auto eager = tree1.ApplicativeBetaReduction();
     for (auto& step : eager) {
         std::cout<<step<<std::endl;
     }
 
-    auto tree2 = tree1;
+    auto tree2 = tree;
     std::cout<<"Lazy strat: "<<std::endl;
     auto lazy = tree2.LazyBetaReduction();
     for (auto& step : lazy) {
         std::cout<<step<<std::endl;
     }
 
-    auto tree3 = tree1;
+    auto tree3 = tree;
     std::cout<<"Normal strat: "<<std::endl;
     auto norm = tree3.NormalBetaReduction();
     for (auto& step : norm) {

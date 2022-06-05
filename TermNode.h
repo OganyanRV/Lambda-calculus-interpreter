@@ -22,7 +22,7 @@ protected:
     ChildType child_type_ = ChildType::kDown;
     size_t begin_idx_ = 0;
     size_t end_idx_ = 0;
-    std::weak_ptr<TermNode> parent_;
+    std::weak_ptr<TermNode> parent_ = (std::weak_ptr<TermNode>());
     std::string term_;
 
 public:
@@ -170,6 +170,7 @@ public:
     Abs(ChildType child_type, size_t begin_idx,
         size_t end_idx, const std::string &source_term) : TermNode(TermType::kAbs, child_type,
                                                                    begin_idx, end_idx, source_term){};
+
 
     const std::shared_ptr<TermNode> &GetDown() const {
         return down_;
