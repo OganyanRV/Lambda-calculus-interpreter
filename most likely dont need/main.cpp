@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include "beta-reduction.h"
-#include "../CountOfTerms.h"
+#include "../TermGenerator.h"
 #include "../TermNode.h"
 
 //#define Show_Steps_At_Tests
@@ -12,7 +12,7 @@ using std::cout;
 using std::string;
 using std::cin;
 
-CountOfTerms CntOfTerms;
+TermGenerator CntOfTerms;
 
 bool CreateTest(const string &test, const string &ans) {
     bool result;
@@ -87,7 +87,7 @@ void ProcessRequest(const string &request) {
             std::cout << "Maximum count of free variables: ";
             std::cin >> m;
 
-            if (CountOfTerms::CheckIfAllowed(n, m)) {
+            if (TermGenerator::CheckIfAllowed(n, m)) {
                 int64_t cnt = CntOfTerms.GetCount(n, m);
                 std::cout << "\nCount of lambda-terms with length " << n << " and max count of free variables "
                           << m << " is: " << cnt << std::endl;

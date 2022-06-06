@@ -1,14 +1,14 @@
 // Copyright 2022 Oganyan Robert
 
+#include "TermGenerator.h"
+#include "beta-reduction.h"
 #include <iostream>
 #include <string>
-#include "beta-reduction.h"
-#include "CountOfTerms.h"
 
 //#define Show_Steps_At_Tests
 #define Show_Steps_At_Interpreter
 
-CountOfTerms cnt_of_terms;
+TermGenerator cnt_of_terms;
 
 bool CreateTest(const std::string &test, const std::string &ans) {
     bool result;
@@ -24,7 +24,8 @@ bool CreateTest(const std::string &test, const std::string &ans) {
     std::cout << "\n";
 
 #ifdef Show_Steps_At_Tests
-    cout << "Showing steps: " << "\n";
+    cout << "Showing steps: "
+         << "\n";
     for (auto &element : res) {
         cout << " -> " << element << "\n";
     }
@@ -52,47 +53,62 @@ bool RunTests() {
 
 void ProcessRequest(const std::string &request) {
     if (request == "rules") {
-        std::cout << "-+-+-+-+-+-+-+-+-+-+  Rules  -+-+-+-+-+-+-+-+-+-+-+-+-+" << "\n";
-        std::cout << "1. Capital letters are only used for Library Functions such as True, False, Not ..." << "\n";
+        std::cout << "-+-+-+-+-+-+-+-+-+-+  Rules  -+-+-+-+-+-+-+-+-+-+-+-+-+"
+                  << "\n";
+        std::cout << "1. Capital letters are only used for Library Functions such as True, False, Not ..."
+                  << "\n";
         std::cout << "2. Variables can be named only with cursive letters or words fully consisting of cursive letters"
-        << "\n";
-        std::cout << "3. Do not mess up with brackets" << "\n";
-        std::cout << "4. Lambda is '\\x'; Expression splits with spaces, for example '(\\x x y) a -> a y' " << "\n";
+                  << "\n";
+        std::cout << "3. Do not mess up with brackets"
+                  << "\n";
+        std::cout << "4. Lambda is '\\x'; Expression splits with spaces, for example '(\\x x y) a -> a y' "
+                  << "\n";
         std::cout
-        << "5. There are some checks for correct syntax, but not for every possible mistake. Do your best to not make any mistakes"
-        << "\n";
+                << "5. There are some checks for correct syntax, but not for every possible mistake. Do your best to not make any mistakes"
+                << "\n";
 
         return;
     }
 
     if (request == "test") {
-        std::cout << "-+-+-+-+-+-+-+-+-+-+  Running tests  -+-+-+-+-+-+-+-+-+-+-+-+-+-+" << "\n";
+        std::cout << "-+-+-+-+-+-+-+-+-+-+  Running tests  -+-+-+-+-+-+-+-+-+-+-+-+-+-+"
+                  << "\n";
         if (RunTests()) {
-            std::cout << "Tests passed successfully!" << "\n";
+            std::cout << "Tests passed successfully!"
+                      << "\n";
         } else {
-            std::cout << "Some of tests did not pass" << "\n";
+            std::cout << "Some of tests did not pass"
+                      << "\n";
         }
         return;
     }
     if (request == "count") {
         while (true) {
             size_t n, m;
-            std::cout << "Enter length of lambda-term and maximum count of free variables" << "\n";
+            std::cout << "Enter length of lambda-term and maximum count of free variables"
+                      << "\n";
             std::cout << "Length of lambda-term: ";
             std::cin >> n;
             std::cout << "Maximum count of free variables: ";
             std::cin >> m;
 
-            if (CountOfTerms::CheckIfAllowed(n, m)) {
+            if (TermGenerator::CheckIfAllowed(n, m)) {
                 int64_t cnt = cnt_of_terms.GetCount(n, m);
                 std::cout << "\nCount of lambda-terms with length " << n << " and max count of free variables "
-                << m << " is: " << cnt << std::endl;
+                          << m << " is: " << cnt << std::endl;
                 return;
             } else {
-                std::cout << "\nOverflow with these parameters. Please choose smaller length and max count" << "\n";
+                std::cout << "\nOverflow with these parameters. Please choose smaller length and max count"
+                          << "\n";
             }
-
         }
+    }
+
+    if (request == "gen") {
+        size_t n, m, k;
+        std::cin >> n >> m >> k;
+        std::cout << cnt_of_terms.UnRankT(n, m, k) << std::endl;
+        return;
     }
 
     if (!IsSyntaxCorrect(request)) {
@@ -109,10 +125,8 @@ void ProcessRequest(const std::string &request) {
 #endif
 
 #ifndef Show_Steps_At_Interpreter
-std::cout << " -> " << *(--output.end()) << "\n";
+    std::cout << " -> " << *(--output.end()) << "\n";
 #endif
-
-
 }
 
 void FastOutput() {
@@ -122,16 +136,25 @@ void FastOutput() {
 }
 
 int main() {
-    std::cout << "Welcome to beta-reduction calculator. Choose the option:" << "\n"
-    << "1. Type 'rules' to read rules for syntax " << "\n"
-    << "2. Type 'test' to run implemented tests" << "\n"
-    << "3. Type the lambda term to reduce it" << "\n"
-    << "4. Type 'count' to calculate count of terms" << "\n"
-    << "5. Type 'exit' to quit the program" << "\n";
+    std::cout << "Welcome to beta-reduction calculator. Choose the option:"
+              << "\n"
+              << "1. Type 'rules' to read rules for syntax "
+              << "\n"
+              << "2. Type 'test' to run implemented tests"
+              << "\n"
+              << "3. Type the lambda term to reduce it"
+              << "\n"
+              << "4. Type 'count' to calculate count of terms"
+              << "\n"
+              << "5. Type 'exit' to quit the program"
+              << "\n"
+              << "6. Type 'gen' to generate term"
+              << "\n";
 
     while (true) {
-//        FastOutput();
-        std::cout << ">" << " ";
+        //        FastOutput();
+        std::cout << ">"
+                  << " ";
         std::string input;
 
         while (input.empty()) {

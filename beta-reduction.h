@@ -29,21 +29,21 @@ std::vector<std::string> BetaReduction(const std::string &term) {
 //    std::cout<<tree.ExprToStringDB(tree.GetRoot())<< std::endl;
     auto tree1 = tree;
     std::cout<<"Applicative strat: "<<std::endl;
-    auto eager = tree1.ApplicativeBetaReduction();
+    auto eager = tree1.CallByValueReduction();
     for (auto& step : eager) {
         std::cout<<step<<std::endl;
     }
 
     auto tree2 = tree;
     std::cout<<"Lazy strat: "<<std::endl;
-    auto lazy = tree2.LazyBetaReduction();
+    auto lazy = tree2.CallByNameReduction();
     for (auto& step : lazy) {
         std::cout<<step<<std::endl;
     }
 
     auto tree3 = tree;
     std::cout<<"Normal strat: "<<std::endl;
-    auto norm = tree3.NormalBetaReduction();
+    auto norm = tree3.NormalReduction();
     for (auto& step : norm) {
         std::cout<<step<<std::endl;
     }
