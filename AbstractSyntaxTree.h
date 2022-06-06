@@ -267,6 +267,7 @@ private:
                 auto parent = cur->GetParent().lock();
                 auto new_value = CopySubTree(value);
                 if (parent->type_ == TermType::kAbs) {
+                    new_value->SetChildType(ChildType::kDown);
                     auto parent_downcast = std::static_pointer_cast<Abs>(parent);
                     new_value->SetParent(parent_downcast);
                     parent_downcast->SetDown(new_value);
@@ -274,8 +275,10 @@ private:
                     auto parent_downcast = std::static_pointer_cast<App>(parent);
                     new_value->SetParent(parent_downcast);
                     if (cur->GetChildType() == ChildType::kLeft) {
+                        new_value->SetChildType(ChildType::kLeft);
                         parent_downcast->SetLeft(new_value);
                     } else if (cur->GetChildType() == ChildType::kRight) {
+                        new_value->SetChildType(ChildType::kRight);
                         parent_downcast->SetRight(new_value);
                     }
                 }
@@ -591,12 +594,15 @@ public:
                 auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
                 parent->SetDown(new_reduced_node);
                 new_reduced_node->SetParent(parent);
+                new_reduced_node->SetChildType(ChildType::kDown);
             } else if (from->GetParent().lock()->type_ == TermType::kApp) {
                 auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 new_reduced_node->SetParent(parent);
                 if (from->child_type_ == ChildType::kLeft) {
+                    new_reduced_node->SetChildType(ChildType::kLeft);
                     parent->SetLeft(new_reduced_node);
                 } else if (from->child_type_ == ChildType::kRight) {
+                    new_reduced_node->SetChildType(ChildType::kRight);
                     parent->SetRight(new_reduced_node);
                 }
             }
