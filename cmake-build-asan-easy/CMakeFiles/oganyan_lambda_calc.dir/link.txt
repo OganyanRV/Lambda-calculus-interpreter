@@ -1,1 +1,0 @@
-/usr/bin/c++ -g -fsanitize=address,undefined -fno-sanitize-recover=all -Wall -Wextra -O0 -g CMakeFiles/oganyan_lambda_calc.dir/most_likely_dont_need/main.cpp.o -o oganyan_lambda_calc 
