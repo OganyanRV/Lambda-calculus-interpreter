@@ -268,9 +268,11 @@ private:
                 auto new_value = CopySubTree(value);
                 if (parent->type_ == TermType::kAbs) {
                     auto parent_downcast = std::static_pointer_cast<Abs>(parent);
+                    new_value->SetParent(parent_downcast);
                     parent_downcast->SetDown(new_value);
                 } else if (parent->type_ == TermType::kApp) {
                     auto parent_downcast = std::static_pointer_cast<App>(parent);
+                    new_value->SetParent(parent_downcast);
                     if (cur->GetChildType() == ChildType::kLeft) {
                         parent_downcast->SetLeft(new_value);
                     } else if (cur->GetChildType() == ChildType::kRight) {
@@ -392,19 +394,19 @@ private:
         return {false, {}};
     }
 
-//    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInLazyStrategy(const std::shared_ptr<TermNode> &from) {
-//        if (from->GetType() == TermType::kApp) {
-//            auto cur = std::static_pointer_cast<App>(from);
-//            auto left_term = cur->GetLeft();
-//            auto right_term = cur->GetRight();
-//            if (left_term->GetType() == TermType::kAbs) {
-//                return {true, cur};
-//            } else {
-//                return FindRedexInLazyStrategy(right_term);
-//            }
-//        }
-//        return {false, {}};
-//    }
+    //    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInLazyStrategy(const std::shared_ptr<TermNode> &from) {
+    //        if (from->GetType() == TermType::kApp) {
+    //            auto cur = std::static_pointer_cast<App>(from);
+    //            auto left_term = cur->GetLeft();
+    //            auto right_term = cur->GetRight();
+    //            if (left_term->GetType() == TermType::kAbs) {
+    //                return {true, cur};
+    //            } else {
+    //                return FindRedexInLazyStrategy(right_term);
+    //            }
+    //        }
+    //        return {false, {}};
+    //    }
 
     std::pair<bool, std::shared_ptr<TermNode>> FindRedexInNormalStrategy(const std::shared_ptr<TermNode> &from) {
         if (from->GetType() == TermType::kVar) {
@@ -431,26 +433,26 @@ private:
         }
         return {false, {}};
     }
-//    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInNormalStrategy(const std::shared_ptr<TermNode> &from) {
-//        if (from->GetType() == TermType::kApp) {
-//            auto cur = std::static_pointer_cast<App>(from);
-//            auto left_term = cur->GetLeft();
-//            auto right_term = cur->GetRight();
-//            if (left_term->GetType() == TermType::kAbs) {
-//                return {true, cur};
-//            } else {
-//                auto res_for_subterm = FindRedexInNormalStrategy(std::static_pointer_cast<Abs>(left_term)->GetDown());
-//                if (res_for_subterm.first) {
-//                    return {true, res_for_subterm.second};
-//                } else {
-//                    return FindRedexInNormalStrategy(right_term);
-//                }
-//            }
-//        } else if (from->GetType() == TermType::kAbs) {
-//            return FindRedexInNormalStrategy(std::static_pointer_cast<Abs>(from)->GetDown());
-//        }
-//        return {false, {}};
-//    }
+    //    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInNormalStrategy(const std::shared_ptr<TermNode> &from) {
+    //        if (from->GetType() == TermType::kApp) {
+    //            auto cur = std::static_pointer_cast<App>(from);
+    //            auto left_term = cur->GetLeft();
+    //            auto right_term = cur->GetRight();
+    //            if (left_term->GetType() == TermType::kAbs) {
+    //                return {true, cur};
+    //            } else {
+    //                auto res_for_subterm = FindRedexInNormalStrategy(std::static_pointer_cast<Abs>(left_term)->GetDown());
+    //                if (res_for_subterm.first) {
+    //                    return {true, res_for_subterm.second};
+    //                } else {
+    //                    return FindRedexInNormalStrategy(right_term);
+    //                }
+    //            }
+    //        } else if (from->GetType() == TermType::kAbs) {
+    //            return FindRedexInNormalStrategy(std::static_pointer_cast<Abs>(from)->GetDown());
+    //        }
+    //        return {false, {}};
+    //    }
 
 public:
     AbstractSyntaxTree(const std::string expression) : expression_(expression) {
@@ -579,20 +581,23 @@ public:
         auto value = cur->GetRight();
         Shift(value, 1, 0);
         Substitution(term_to_reduce->GetDown(), value, 0);
-        int kok = 0;
-        Shift(term_to_reduce->GetDown(), -1, 0);
+        auto new_reduced_node = std::static_pointer_cast<Abs>(term_to_reduce->GetDown()->GetParent().lock())->GetDown();
+        Shift(new_reduced_node, -1, 0);
         if (from->GetParent().expired()) {
-            root_ = term_to_reduce->GetDown();
+            root_ = new_reduced_node;
+            root_->SetParent({});
         } else {
             if (from->GetParent().lock()->type_ == TermType::kAbs) {
                 auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
-                parent->SetDown(term_to_reduce->GetDown());
+                parent->SetDown(new_reduced_node);
+                new_reduced_node->SetParent(parent);
             } else if (from->GetParent().lock()->type_ == TermType::kApp) {
                 auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                new_reduced_node->SetParent(parent);
                 if (from->child_type_ == ChildType::kLeft) {
-                    parent->SetLeft((term_to_reduce->GetDown()));
+                    parent->SetLeft(new_reduced_node);
                 } else if (from->child_type_ == ChildType::kRight) {
-                    parent->SetRight((term_to_reduce->GetDown()));
+                    parent->SetRight(new_reduced_node);
                 }
             }
         }
