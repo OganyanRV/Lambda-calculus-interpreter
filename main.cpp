@@ -1,6 +1,6 @@
 // Copyright 2022 Oganyan Robert
 
-#include "TermGenerator.h"
+#include "include/TermGenerator.h"
 #include "beta-reduction.h"
 #include <iostream>
 #include <string>

@@ -5,7 +5,7 @@
 #include <iostream>
 #include "parse-syntax.h"
 #include "correct-syntax-check.h"
-#include "AbstractSyntaxTree.h"
+#include "include/AbstractSyntaxTree.h"
 std::vector<std::string> BetaReduction(const std::string &term) {
     //  Check for correct input
     if (!IsSyntaxCorrect(term)) {

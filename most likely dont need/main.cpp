@@ -3,8 +3,8 @@
 #include <iostream>
 #include <string>
 #include "beta-reduction.h"
-#include "../TermGenerator.h"
-#include "../TermNode.h"
+#include "../include/TermGenerator.h"
+#include "../include/TermNode.h"
 
 //#define Show_Steps_At_Tests
 #define Show_Steps_At_Interpreter
