@@ -20,71 +20,28 @@ class TermNode {
 protected:
     TermType type_ = TermType::kApp;
     ChildType child_type_ = ChildType::kDown;
-    size_t begin_idx_ = 0;
-    size_t end_idx_ = 0;
     std::weak_ptr<TermNode> parent_ = (std::weak_ptr<TermNode>());
     std::string term_;
 
 public:
     TermNode() = default;
-    TermNode(ChildType child_type) : child_type_(child_type){};
-    TermNode(size_t begin_idx, size_t end_idx) : begin_idx_(begin_idx),
-                                                 end_idx_(end_idx){};
-    TermNode(TermType type, size_t begin_idx, size_t end_idx) : type_(type),
-                                                                begin_idx_(begin_idx),
-                                                                end_idx_(end_idx){};
-
-    TermNode(ChildType child_type,
-             size_t begin_idx,
-             size_t end_idx) : child_type_(child_type),
-                               begin_idx_(begin_idx),
-                               end_idx_(end_idx){};
-
+    virtual ~TermNode() = default;
+    TermNode(ChildType child_type) : child_type_(child_type){}
+    TermNode(TermType type) : type_(type){}
+    TermNode(const std::string &term) : term_(term){}
     TermNode(TermType type,
-             ChildType child_type,
-             size_t begin_idx,
-             size_t end_idx) : type_(type),
-                               child_type_(child_type),
-                               begin_idx_(begin_idx),
-                               end_idx_(end_idx){};
-
+             ChildType child_type) : type_(type),
+                                     child_type_(child_type){}
     TermNode(ChildType child_type,
-             size_t begin_idx,
-             size_t end_idx,
-             const std::string &source_term) : child_type_(child_type),
-                                               begin_idx_(begin_idx),
-                                               end_idx_(end_idx),
-                                               term_(source_term.substr(
-                                                       begin_idx_,
-                                                       end_idx - begin_idx_ + 1)){};
-
-    TermNode(size_t begin_idx,
-             size_t end_idx,
-             const std::string &source_term) : begin_idx_(begin_idx),
-                                               end_idx_(end_idx),
-                                               term_(source_term.substr(
-                                                       begin_idx_,
-                                                       end_idx - begin_idx_ + 1)){};
+             const std::string &term) : child_type_(child_type),
+                                        term_(term){}
     TermNode(TermType type,
-             size_t begin_idx,
-             size_t end_idx,
-             const std::string &source_term) : type_(type),
-                                               begin_idx_(begin_idx),
-                                               end_idx_(end_idx),
-                                               term_(source_term.substr(
-                                                       begin_idx_,
-                                                       end_idx - begin_idx_ + 1)) {}
-
+             const std::string &term) : type_(type),
+                                        term_(term) {}
     TermNode(TermType type, ChildType child_type,
-             size_t begin_idx,
-             size_t end_idx,
-             const std::string &source_term) : type_(type),
-                                               child_type_(child_type),
-                                               begin_idx_(begin_idx),
-                                               end_idx_(end_idx),
-                                               term_(source_term.substr(
-                                                       begin_idx_,
-                                                       end_idx - begin_idx_ + 1)) {}
+             const std::string &term) : type_(type),
+                                        child_type_(child_type),
+                                        term_(term) {}
 
     std::string GetTerm() const {
         return term_;
@@ -92,26 +49,15 @@ public:
     TermType GetType() const {
         return type_;
     }
-    size_t GetBeginIdx() const {
-        return begin_idx_;
-    }
-    size_t GetEndIdx() const {
-        return end_idx_;
-    }
     ChildType GetChildType() const {
         return child_type_;
     }
     const std::weak_ptr<TermNode> &GetParent() const {
         return parent_;
     }
+
     void SetType(TermType type) {
         type_ = type;
-    }
-    void SetBeginIdx(size_t begin_idx) {
-        begin_idx_ = begin_idx;
-    }
-    void SetEndIdx(size_t end_idx) {
-        end_idx_ = end_idx;
     }
     void SetParent(const std::weak_ptr<TermNode> &parent) {
         parent_ = parent;
@@ -119,29 +65,22 @@ public:
     void SetTerm(const std::string &term) {
         term_ = term;
     }
-
     void SetChildType(ChildType child_type) {
         child_type_ = child_type;
     }
-
-
-    virtual ~TermNode() = default;
 };
 
 class Var : public TermNode {
+private:
     size_t de_bruijn_index_;
-    bool is_free_ = true;
-    //    size_t alpha_conversion_count_;
+    bool is_free_ = true; // ?
 
 public:
-    Var() = default;
-    Var(size_t begin_idx, size_t end_idx) : TermNode(TermType::kVar, begin_idx, end_idx){};
-    Var(size_t begin_idx, size_t end_idx,
-        const std::string &source_term) : TermNode(TermType::kVar, begin_idx, end_idx, source_term){};
-    Var(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kVar, child_type, begin_idx, end_idx){};
-    Var(ChildType child_type, size_t begin_idx,
-        size_t end_idx, const std::string &source_term) : TermNode(TermType::kVar, child_type,
-                                                                   begin_idx, end_idx, source_term){};
+    Var() : TermNode(TermType::kVar){}
+    Var(const std::string &term) : TermNode(TermType::kVar, term){}
+    Var(ChildType child_type) : TermNode(TermType::kVar, child_type){}
+    Var(ChildType child_type, const std::string &term) : TermNode(TermType::kVar, child_type,
+                                                                  term){}
 
     size_t GetDeBruijnIndex() const {
         return de_bruijn_index_;
@@ -149,6 +88,7 @@ public:
     bool IsFree() const {
         return is_free_;
     }
+
     void SetDeBruijnIndex(size_t de_bruijn_index) {
         de_bruijn_index_ = de_bruijn_index;
     }
@@ -162,20 +102,15 @@ private:
     std::shared_ptr<TermNode> down_;
 
 public:
-    Abs() = default;
-    Abs(size_t begin_idx, size_t end_idx) : TermNode(TermType::kAbs, begin_idx, end_idx){};
-    Abs(size_t begin_idx, size_t end_idx,
-        const std::string &source_term) : TermNode(TermType::kAbs, begin_idx, end_idx, source_term){};
-    Abs(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kAbs, child_type, begin_idx, end_idx){};
-    Abs(ChildType child_type, size_t begin_idx,
-        size_t end_idx, const std::string &source_term) : TermNode(TermType::kAbs, child_type,
-                                                                   begin_idx, end_idx, source_term){};
+    Abs() : TermNode(TermType::kAbs){}
+    Abs(const std::string &term) : TermNode(TermType::kAbs, term){}
+    Abs(ChildType child_type) : TermNode(TermType::kAbs, child_type){}
+    Abs(ChildType child_type, const std::string &term) : TermNode(TermType::kAbs, child_type, term){}
 
 
     const std::shared_ptr<TermNode> &GetDown() const {
         return down_;
     }
-
     std::shared_ptr<TermNode> &GetDown() {
         return down_;
     }
@@ -192,28 +127,21 @@ private:
     std::shared_ptr<TermNode> right_;
 
 public:
-    App() = default;
-    App(ChildType child_type) : TermNode(child_type){};
-    App(size_t begin_idx, size_t end_idx) : TermNode(TermType::kApp, begin_idx, end_idx){};
-    App(size_t begin_idx, size_t end_idx,
-        const std::string &source_term) : TermNode(TermType::kApp, begin_idx, end_idx, source_term){};
-    App(ChildType child_type, size_t begin_idx, size_t end_idx) : TermNode(TermType::kApp, child_type, begin_idx, end_idx){};
-    App(ChildType child_type, size_t begin_idx,
-        size_t end_idx, const std::string &source_term) : TermNode(TermType::kApp, child_type,
-                                                                   begin_idx, end_idx, source_term){};
+    App() : TermNode(TermType::kApp){}
+    App(ChildType child_type) : TermNode(TermType::kApp, child_type){}
+    App(const std::string &term) : TermNode(TermType::kApp, term){}
+    App(ChildType child_type, const std::string &term) : TermNode(TermType::kApp, child_type,
+                                                                  term){}
 
     const std::shared_ptr<TermNode> &GetLeft() const {
         return left_;
     }
-
     const std::shared_ptr<TermNode> &GetRight() const {
         return right_;
     }
-
     std::shared_ptr<TermNode> &GetLeft() {
         return left_;
     }
-
     std::shared_ptr<TermNode> &GetRight() {
         return right_;
     }
@@ -222,11 +150,9 @@ public:
     void SetLeft(const std::shared_ptr<TermNode> &left) {
         left_ = left;
     }
-
     void SetRight(const std::shared_ptr<TermNode> &right) {
         right_ = right;
     }
 };
-
 
 #endif//OGANYAN_LAMBDA_CALC_TERMNODE_H
