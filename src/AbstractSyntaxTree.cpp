@@ -333,7 +333,7 @@ void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_no
     }
 }
 
-std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInApplicativeStrategy(const std::shared_ptr<TermNode> &from) {
+std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInCallByValue(const std::shared_ptr<TermNode> &from) {
     if (from->GetType() == TermType::kAbs) {
         return {false, {}};
     }
@@ -342,20 +342,20 @@ std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInApplic
         auto left_term = cur->GetLeft();
         auto right_term = cur->GetRight();
         if (left_term->GetType() == TermType::kAbs) {
-            auto res_for_right = FindRedexInApplicativeStrategy(right_term);
+            auto res_for_right = FindRedexInCallByValue(right_term);
             if (!res_for_right.first) {
                 return {true, cur};
             } else {
                 return res_for_right;
             }
         } else {
-            return FindRedexInApplicativeStrategy(left_term);
+            return FindRedexInCallByValue(left_term);
         }
     }
     return {false, {}};
 }
 
-std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInLazyStrategy(const std::shared_ptr<TermNode> &from) {
+std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInCallByName(const std::shared_ptr<TermNode> &from) {
     if (from->GetType() == TermType::kAbs) {
         return {false, {}};
     }
@@ -366,7 +366,7 @@ std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInLazySt
         if (left_term->GetType() == TermType::kAbs) {
             return {true, cur};
         } else {
-            return FindRedexInLazyStrategy(left_term);
+            return FindRedexInCallByName(left_term);
         }
     }
     return {false, {}};
@@ -448,14 +448,14 @@ AbstractSyntaxTree &AbstractSyntaxTree::operator=(const AbstractSyntaxTree &othe
 
 std::vector<std::string> AbstractSyntaxTree::CallByValueReduction() {
     std::vector<std::string> reduction_steps;
-    reduction_steps.push_back(ExprToStringDB(this->root_));
+    reduction_steps.push_back(ExprToStringHaskell(this->root_));
     while (true) {
-        auto redex = FindRedexInApplicativeStrategy(this->root_);
+        auto redex = FindRedexInCallByValue(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringDB(this->root_));
+        reduction_steps.push_back(ExprToStringHaskell(this->root_));
 
         if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
             reduction_steps.pop_back();
@@ -467,14 +467,14 @@ std::vector<std::string> AbstractSyntaxTree::CallByValueReduction() {
 
 std::vector<std::string> AbstractSyntaxTree::CallByNameReduction() {
     std::vector<std::string> reduction_steps;
-    reduction_steps.push_back(ExprToStringDB(this->root_));
+    reduction_steps.push_back(ExprToStringHaskell(this->root_));
     while (true) {
-        auto redex = FindRedexInLazyStrategy(this->root_);
+        auto redex = FindRedexInCallByName(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringDB(this->root_));
+        reduction_steps.push_back(ExprToStringHaskell(this->root_));
 
         if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
             reduction_steps.pop_back();
@@ -486,14 +486,14 @@ std::vector<std::string> AbstractSyntaxTree::CallByNameReduction() {
 
 std::vector<std::string> AbstractSyntaxTree::NormalReduction() {
     std::vector<std::string> reduction_steps;
-    reduction_steps.push_back(ExprToStringDB(this->root_));
+    reduction_steps.push_back(ExprToStringHaskell(this->root_));
     while (true) {
         auto redex = FindRedexInNormalStrategy(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringDB(this->root_));
+        reduction_steps.push_back(ExprToStringHaskell(this->root_));
 
         if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
             reduction_steps.pop_back();
@@ -555,6 +555,23 @@ std::string AbstractSyntaxTree::ExprToStringDBBrackets(const std::shared_ptr<Ter
     return {};
 }
 
+std::string AbstractSyntaxTree::ExprToStringHaskell(const std::shared_ptr<TermNode> &from) {
+    if (from->type_ == TermType::kApp) {
+        auto cur = std::static_pointer_cast<App>(from);
+        auto left_str = ExprToStringHaskell(cur->GetLeft());
+        auto right_str = ExprToStringHaskell(cur->GetRight());
+        return "(App " + left_str + " " + right_str + ")";
+    } else if (from->type_ == TermType::kAbs) {
+        auto cur = std::static_pointer_cast<Abs>(from);
+        auto down_str = ExprToStringHaskell(cur->GetDown());
+        return "(Abs " + down_str + ")";
+    } else if (from->type_ == TermType::kVar) {
+        auto cur = std::static_pointer_cast<Var>(from);
+        return std::to_string(cur->GetDeBruijnIndex());
+    }
+    return {};
+}
+
 const std::shared_ptr<TermNode> &AbstractSyntaxTree::GetRoot() const {
     return root_;
 }
@@ -562,3 +579,4 @@ const std::shared_ptr<TermNode> &AbstractSyntaxTree::GetRoot() const {
 std::shared_ptr<TermNode> &AbstractSyntaxTree::GetRoot() {
     return root_;
 }
+

@@ -5,6 +5,12 @@
 #include <string>
 #include <vector>
 
+enum class InputType {
+    kNormal,
+    kDeBruijn,
+    kHaskell
+};
+
 class AbstractSyntaxTree {
 private:
     std::shared_ptr<TermNode> root_;
@@ -25,8 +31,8 @@ private:
     std::shared_ptr<TermNode> CopySubTree(const std::shared_ptr<TermNode> &from) const;
     void CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_node, const std::shared_ptr<TermNode> &from) const;
 
-    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInApplicativeStrategy(const std::shared_ptr<TermNode> &from);
-    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInLazyStrategy(const std::shared_ptr<TermNode> &from);
+    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInCallByValue(const std::shared_ptr<TermNode> &from);
+    std::pair<bool, std::shared_ptr<TermNode>> FindRedexInCallByName(const std::shared_ptr<TermNode> &from);
     std::pair<bool, std::shared_ptr<TermNode>> FindRedexInNormalStrategy(const std::shared_ptr<TermNode> &from);
 
 public:
@@ -43,6 +49,7 @@ public:
     ExprToString(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringDBBrackets(const std::shared_ptr<TermNode> &from);
+    std::string ExprToStringHaskell(const std::shared_ptr<TermNode> &from);
 
     const std::shared_ptr<TermNode> &GetRoot() const;
     std::shared_ptr<TermNode> &GetRoot();

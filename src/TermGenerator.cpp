@@ -52,7 +52,7 @@ std::string TermGenerator::AppTerm(size_t m, size_t n, size_t j, int64_t h) {
         int64_t md = (h - 1) % tnjm;
         std::string left_term = UnRankT(j, m, dv + 1);
         std::string right_term = UnRankT(n - j, m, md + 1);
-        return std::string("(App ") + left_term + " " + right_term + ") ";
+        return std::string("(App ") + left_term + " " + right_term + ")";
     } else {
         return AppTerm(m, n, j + 1, h - tjmtnjm);
     }
@@ -64,7 +64,7 @@ std::string TermGenerator::UnRankT(size_t n, size_t m, int64_t k) {
     }
 
     if (k <= GetCount(n - 1, m + 1)) {
-        return "(" + std::string("Abs") + " " + UnRankT(n - 1, m + 1, k) + ")";
+        return "(Abs " + UnRankT(n - 1, m + 1, k) + ")";
     } else {
         return AppTerm(m, n - 1, 0, k - GetCount(n - 1, m + 1));
     }
