@@ -14,7 +14,7 @@ int64_t TermGenerator::CalculateTermsCount(size_t term_size, size_t free_variabl
 
 void TermGenerator::FillTable() {
     for (size_t term_size_idx = 1; term_size_idx <= kMaxTermSize; ++term_size_idx) {
-        for (size_t free_var_idx = 0; free_var_idx < kMaxFreeVarsCount; ++free_var_idx) {
+        for (size_t free_var_idx = 0; free_var_idx <= kMaxFreeVarsCount; ++free_var_idx) {
             if (term_size_idx + free_var_idx <= kMaxTermSize) {
                 terms_count_table_[term_size_idx][free_var_idx] = CalculateTermsCount(term_size_idx, free_var_idx);
             }
@@ -93,7 +93,6 @@ std::shared_ptr<TermNode> TermGenerator::AppTerm(size_t max_free_var_cnt, size_t
         left_term->SetChildType(ChildType::kLeft);
         right_term->SetChildType(ChildType::kRight);
         return app;
-//        return std::string("(App ") + left_term + " " + right_term + ")";
     } else {
         return AppTerm(max_free_var_cnt, term_size, j + 1, h - tjmtnjm, from);
     }
@@ -104,16 +103,6 @@ std::shared_ptr<TermNode> TermGenerator::UnRankT(size_t term_size, size_t max_fr
         auto var = std::make_shared<Var>(std::to_string(number_of_term - 1));
         var->SetDeBruijnIndex(number_of_term - 1);
         var->SetParent(from);
-//        if (from->GetType() == TermType::kAbs) {
-//            var->SetChildType(ChildType::kDown);
-//        } else if (from->GetType() == TermType::kApp) {
-//            var->SetChildType(ChildType::kDown);
-//            auto parent = std::static_pointer_cast<App>(from->parent_.lock());
-//            parent->SetLeft(current_node);
-//        } else if (from->child_type_ == ChildType::kRight) {
-//            auto parent = std::static_pointer_cast<App>(from->parent_.lock());
-//            parent->SetRight(current_node);
-//        }
         return var;
     }
 
@@ -132,6 +121,7 @@ std::shared_ptr<TermNode> TermGenerator::UnRankT(size_t term_size, size_t max_fr
                           number_of_term - GetCount(term_size - 1, max_free_var_cnt + 1), from);
     }
 }
+
 AbstractSyntaxTree TermGenerator::GenerateTerm(size_t term_size, size_t max_free_var_cnt, int64_t number_of_term) {
     std::shared_ptr<Abs> temp_root = {};
     std::shared_ptr<TermNode> root = UnRankT(term_size, max_free_var_cnt, number_of_term,

@@ -6,10 +6,11 @@
 #include "AbstractSyntaxTree.h"
 
 class TermGenerator {
-private:
-    std::vector<std::vector<int64_t>> terms_count_table_;
+public:
     static const int kMaxTermSize = 18;
     static const int kMaxFreeVarsCount = 18;
+private:
+    std::vector<std::vector<int64_t>> terms_count_table_;
 
     int64_t CalculateTermsCount(size_t term_size, size_t free_variables_size);
     void FillTable();
