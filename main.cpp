@@ -1,6 +1,6 @@
+#include "correct-syntax-check.h"
 #include "include/TermGenerator.h"
 #include "parse-syntax.h"
-#include "correct-syntax-check.h"
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -8,12 +8,8 @@
 
 TermGenerator terms_generator;
 
-std::vector<std::string> BetaReduction(const std::string &term, InputType input_type) {
-    //  Check for correct input
-    if (!IsSyntaxCorrect(term, input_type)) {
-        return std::vector<std::string>();
-    }
 
+std::vector<std::string> BetaReduction(const std::string &term, InputType input_type, StrategyType strategy_type) {
     //  Make appropriate form of term
     auto correct_form_term = MakeCorrectForm(term);
 
@@ -43,9 +39,67 @@ std::vector<std::string> BetaReduction(const std::string &term, InputType input_
     return {};
 }
 
+void StartBetaReductionMenu() {
+    while (true) {
+        std::cout << "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n";
+        std::cout << "Beta-reduction's interpreter. Options:\n"
+                  << "1. There are 3 possible types of input:\n"
+                  << "\t1.1 Type '1' for classic term style. Example: (\\x x) (\\y y)\n"
+                  << "\t1.2 Type '2' for term in de Bruijn notation style. Example: (\\ 0) (\\ 0)\n"
+                  << "\t1.3 Type '3' for Haskell-style term. Example: (App((Abs(0) (Abs(0)))\n"
+                  << "2. Type 'exit' to exit beta-reduction's interpreter\n";
+        std::string choice;
+        std::cin >> choice;
+        if (choice == "exit") {
+            return;
+        }
+
+        InputType input_type;
+        if (choice == "1") {
+            input_type = InputType::kNormal;
+        } else if (choice == "2") {
+            input_type = InputType::kDeBruijn;
+        } else if (choice == "3") {
+            input_type = InputType::kHaskell;
+        } else {
+            continue;
+        }
+
+        std::cout << "Enter term:\n";
+        std::string term;
+        while (term.empty()) {
+            getline(std::cin, term);
+        }
+
+        std::cout << "1. Type '1' for normal strategy reduction\n"
+                  << "2. Type '2' for call by name strategy reduction\n"
+                  << "3. Type '3' for call by value reduction\n"
+                  << "4. Type '4' for all strategies reductions\n";
+
+        StrategyType strategy_type;
+        while (true) {
+            std::cin >> choice;
+            if (choice == "1") {
+                strategy_type = StrategyType::kNormal;
+            } else if (choice == "2") {
+                strategy_type = StrategyType::kCallByName;
+            } else if (choice == "3") {
+                strategy_type = StrategyType::kCallByValue;
+            } else if (choice == "4") {
+                strategy_type = StrategyType::kAll;
+            } else {
+                continue;
+            }
+            break;
+        }
+
+        BetaReduction(term, input_type, strategy_type);
+    }
+}
+
 bool CreateTest(const std::string &test, const std::string &ans) {
     bool result;
-    auto res = BetaReduction(test, InputType::kNormal);
+    auto res = BetaReduction(test, InputType::kNormal, StrategyType::kNormal);
     if (*(--res.end()) == ans) {
         std::cout << "Correct! " << test << " reduced correctly to " << ans;
         result = true;
@@ -108,7 +162,7 @@ void ProcessRequest(const std::string &request) {
                   << "\n\t\t4.3.2 Applications splits with spaces."
                   << "\n\t\t4.3.3 Applications looks like this: App(term term)"
                   << "\n\t\t4.3.4 Abstractions looks like this: Abs(term)"
-                  << "\n\t\t4.3.5 Example: App((Abs(0) (Abs(0))"
+                  << "\n\t\t4.3.5 Example: (App((Abs(0) (Abs(0)))"
                   << "\n";
 
         return;
@@ -167,7 +221,8 @@ void ProcessRequest(const std::string &request) {
                     std::cout << std::setw(2) << size_of_term << "  \t";
                     for (size_t max_free_vars_cnt = 0; max_free_vars_cnt <= TermGenerator::kMaxFreeVarsCount; ++max_free_vars_cnt) {
                         if (max_free_vars_cnt + size_of_term <= 18) {
-                            std::cout << std::setw(20) << terms_generator.GetCount(size_of_term, max_free_vars_cnt);
+                            std::cout << std::setw(20)
+                                      << terms_generator.GetCount(size_of_term, max_free_vars_cnt);
                         }
                     }
                     std::cout << "\n";
@@ -201,17 +256,9 @@ void ProcessRequest(const std::string &request) {
                           << "\n";
             }
         }
+    } else if (request == "start") {
+        StartBetaReductionMenu();
     }
-
-    if (!IsSyntaxCorrect(request, InputType::kNormal)) {
-        return;
-    }
-
-    //    auto output = BetaReduction(request);
-
-    //    for (auto &element : output) {
-    //        std::cout << " -> " << element << "\n";
-    //    }
 }
 
 

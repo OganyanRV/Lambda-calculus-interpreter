@@ -19,4 +19,11 @@ enum class InputType {
     kHaskell
 };
 
+enum class StrategyType {
+    kNormal,
+    kCallByName,
+    kCallByValue,
+    kAll
+};
+
 #endif//OGANYAN_LAMBDA_CALC_ENUMS_H
