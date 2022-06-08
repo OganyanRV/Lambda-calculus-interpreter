@@ -43,29 +43,98 @@ bool TermGenerator::CheckIfAllowed(size_t term_size, size_t free_variables_size)
     return true;
 }
 
-std::string TermGenerator::AppTerm(size_t m, size_t n, size_t j, int64_t h) {
-    int64_t tnjm = GetCount(n - j, m);
-    int64_t tjmtnjm = GetCount(j, m) * tnjm;
+std::string TermGenerator::AppTermStr(size_t max_free_var_cnt, size_t term_size, size_t j, int64_t h) {
+    int64_t tnjm = GetCount(term_size - j, max_free_var_cnt);
+    int64_t tjmtnjm = GetCount(j, max_free_var_cnt) * tnjm;
 
     if (h <= tjmtnjm) {
         int64_t dv = (h - 1) / tnjm;
         int64_t md = (h - 1) % tnjm;
-        std::string left_term = UnRankT(j, m, dv + 1);
-        std::string right_term = UnRankT(n - j, m, md + 1);
+        std::string left_term = UnRankTStr(j, max_free_var_cnt, dv + 1);
+        std::string right_term = UnRankTStr(term_size - j, max_free_var_cnt, md + 1);
         return std::string("(App ") + left_term + " " + right_term + ")";
     } else {
-        return AppTerm(m, n, j + 1, h - tjmtnjm);
+        return AppTermStr(max_free_var_cnt, term_size, j + 1, h - tjmtnjm);
     }
 }
 
-std::string TermGenerator::UnRankT(size_t n, size_t m, int64_t k) {
-    if (n == 0) {
-        return std::to_string(k - 1);// k-1 cause notation begins with 0
+std::string TermGenerator::UnRankTStr(size_t term_size, size_t max_free_var_cnt, int64_t number_of_term) {
+    if (term_size == 0) {
+        return std::to_string(number_of_term - 1);// k-1 cause notation begins with 0
     }
 
-    if (k <= GetCount(n - 1, m + 1)) {
-        return "(Abs " + UnRankT(n - 1, m + 1, k) + ")";
+    if (number_of_term <= GetCount(term_size - 1, max_free_var_cnt + 1)) {
+        return "(Abs " + UnRankTStr(term_size - 1, max_free_var_cnt + 1, number_of_term) + ")";
     } else {
-        return AppTerm(m, n - 1, 0, k - GetCount(n - 1, m + 1));
+        return AppTermStr(max_free_var_cnt, term_size - 1, 0,
+                          number_of_term - GetCount(term_size - 1, max_free_var_cnt + 1));
     }
+}
+
+std::string TermGenerator::GenerateTermStr(size_t term_size, size_t max_free_var_cnt, int64_t number_of_term) {
+    return UnRankTStr(term_size, max_free_var_cnt, number_of_term);
+}
+
+
+std::shared_ptr<TermNode> TermGenerator::AppTerm(size_t max_free_var_cnt, size_t term_size, size_t j,
+                                                 int64_t h, std::shared_ptr<TermNode> from) {
+    int64_t tnjm = GetCount(term_size - j, max_free_var_cnt);
+    int64_t tjmtnjm = GetCount(j, max_free_var_cnt) * tnjm;
+
+    if (h <= tjmtnjm) {
+        int64_t dv = (h - 1) / tnjm;
+        int64_t md = (h - 1) % tnjm;
+        auto app = std::make_shared<App>();
+        auto left_term = UnRankT(j, max_free_var_cnt, dv + 1, from);
+        auto right_term = UnRankT(term_size - j, max_free_var_cnt, md + 1, from);
+
+        app->SetLeft(left_term);
+        app->SetRight(right_term);
+        left_term->SetChildType(ChildType::kLeft);
+        right_term->SetChildType(ChildType::kRight);
+        return app;
+//        return std::string("(App ") + left_term + " " + right_term + ")";
+    } else {
+        return AppTerm(max_free_var_cnt, term_size, j + 1, h - tjmtnjm, from);
+    }
+}
+std::shared_ptr<TermNode> TermGenerator::UnRankT(size_t term_size, size_t max_free_var_cnt,
+                                                 int64_t number_of_term, std::shared_ptr<TermNode> from) {
+    if (term_size == 0) {
+        auto var = std::make_shared<Var>(std::to_string(number_of_term - 1));
+        var->SetDeBruijnIndex(number_of_term - 1);
+        var->SetParent(from);
+//        if (from->GetType() == TermType::kAbs) {
+//            var->SetChildType(ChildType::kDown);
+//        } else if (from->GetType() == TermType::kApp) {
+//            var->SetChildType(ChildType::kDown);
+//            auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+//            parent->SetLeft(current_node);
+//        } else if (from->child_type_ == ChildType::kRight) {
+//            auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+//            parent->SetRight(current_node);
+//        }
+        return var;
+    }
+
+    if (number_of_term <= GetCount(term_size - 1, max_free_var_cnt + 1)) {
+        auto abs = std::make_shared<Abs>("\\");
+        abs->SetParent(from);
+
+        auto sub_term = UnRankT(term_size - 1, max_free_var_cnt + 1,
+                                number_of_term, abs);
+        sub_term->SetParent(abs);
+        abs->SetDown(sub_term);
+        abs->SetChildType(ChildType::kDown);
+        return abs;
+    } else {
+        return AppTerm(max_free_var_cnt, term_size - 1, 0,
+                          number_of_term - GetCount(term_size - 1, max_free_var_cnt + 1), from);
+    }
+}
+AbstractSyntaxTree TermGenerator::GenerateTerm(size_t term_size, size_t max_free_var_cnt, int64_t number_of_term) {
+    std::shared_ptr<Abs> temp_root = {};
+    std::shared_ptr<TermNode> root = UnRankT(term_size, max_free_var_cnt, number_of_term,
+                                             std::static_pointer_cast<TermNode>(temp_root));
+    return AbstractSyntaxTree(root);
 }

@@ -1,18 +1,7 @@
 #ifndef OGANYAN_LAMBDA_CALC_TERMNODE_H
 #define OGANYAN_LAMBDA_CALC_TERMNODE_H
 #include <memory>
-
-enum class TermType {
-    kVar,
-    kAbs,
-    kApp
-};
-
-enum class ChildType {
-    kLeft,
-    kRight,
-    kDown
-};
+#include "Enums.h"
 
 class TermNode {
     friend class AbstractSyntaxTree;

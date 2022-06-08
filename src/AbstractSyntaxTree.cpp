@@ -1,13 +1,39 @@
 #include "../include/AbstractSyntaxTree.h"
 
+AbstractSyntaxTree::AbstractSyntaxTree(const std::string &expression, InputType input_type) : source_exp_(expression) {
+    if (input_type == InputType::kNormal) {
+        root_ = std::make_shared<TermNode>(source_exp_);
+        BuildTreeNormal(root_, 0, source_exp_.size() - 1);
+        CalculateDeBruijnNotation(root_);
+    }
+}
+
+AbstractSyntaxTree::AbstractSyntaxTree(const std::shared_ptr<TermNode>& root) {
+    root_ = root;
+    source_exp_ = ExprToStringDB(root_);
+}
+
+AbstractSyntaxTree::AbstractSyntaxTree(const AbstractSyntaxTree &other) : source_exp_(other.source_exp_),
+                                                                          name_context_(other.name_context_) {
+    root_ = other.CopySubTree(other.root_);
+}
+
+
+AbstractSyntaxTree &AbstractSyntaxTree::operator=(const AbstractSyntaxTree &other) {
+    source_exp_ = other.source_exp_;
+    name_context_ = other.name_context_;
+    root_ = other.CopySubTree(other.root_);
+    return *this;
+}
+
 size_t AbstractSyntaxTree::FindClosingBracket(size_t begin_idx, size_t end_idx) {
     size_t cur_idx = begin_idx;
     int64_t brackets_count = 0;
     while (cur_idx <= end_idx) {
-        if (this->expression_[cur_idx] == '(') {
+        if (this->source_exp_[cur_idx] == '(') {
             ++brackets_count;
         }
-        if (this->expression_[cur_idx] == ')') {
+        if (this->source_exp_[cur_idx] == ')') {
             --brackets_count;
         }
         if (brackets_count == -1) {
@@ -28,14 +54,14 @@ std::pair<TermType, std::array<size_t, 4>> AbstractSyntaxTree::SplitIntoTerms(si
     size_t cur_index;
     while (true) {
         cur_index = new_begin_idx;
-        while (expression_[cur_index] == ' ' && cur_index <= new_end_idx) {
+        while (source_exp_[cur_index] == ' ' && cur_index <= new_end_idx) {
             ++cur_index;
             ++new_begin_idx;
         }
 
-        if (expression_[cur_index] == '(') {
+        if (source_exp_[cur_index] == '(') {
             size_t bracket_end_idx = FindClosingBracket(new_begin_idx + 1, new_end_idx);
-            if (expression_[cur_index + 1] == '\\') {
+            if (source_exp_[cur_index + 1] == '\\') {
                 if (bracket_end_idx == new_end_idx) {
                     // (\x x c) case
                     new_term_indexes[0] = cur_index + 1;
@@ -94,45 +120,45 @@ std::pair<TermType, std::array<size_t, 4>> AbstractSyntaxTree::SplitIntoTerms(si
     }
 }
 
-void AbstractSyntaxTree::BuildTree(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
+void AbstractSyntaxTree::BuildTreeNormal(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
     auto terms{SplitIntoTerms(begin_idx, end_idx)};
     if (root_ == from) {
         if (terms.first == TermType::kVar) {
-            auto current_node = std::make_shared<Var>(expression_.substr(terms.second[0],
+            auto current_node = std::make_shared<Var>(source_exp_.substr(terms.second[0],
                                                                          terms.second[1] - terms.second[0] + 1));
             root_ = current_node;
             return;
         }
         if (terms.first == TermType::kAbs) {
-            auto current_node = std::make_shared<Abs>(expression_.substr(terms.second[0],
+            auto current_node = std::make_shared<Abs>(source_exp_.substr(terms.second[0],
                                                                          terms.second[1] - terms.second[0] + 1));
             auto sub_term = std::make_shared<TermNode>(ChildType::kDown,
-                                                       expression_.substr(terms.second[2],
+                                                       source_exp_.substr(terms.second[2],
                                                                           terms.second[2] - terms.second[3] + 1));
             current_node->SetDown(sub_term);
             sub_term->SetParent(current_node);
             root_ = current_node;
-            return BuildTree(sub_term, terms.second[2], terms.second[3]);
+            return BuildTreeNormal(sub_term, terms.second[2], terms.second[3]);
         }
         if (terms.first == TermType::kApp) {
             auto current_node = std::make_shared<App>();
             auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
-                                                       expression_.substr(terms.second[0],
+                                                       source_exp_.substr(terms.second[0],
                                                                           terms.second[1] - terms.second[0] + 1));
             auto right_app = std::make_shared<TermNode>(ChildType::kRight,
-                                                        expression_.substr(terms.second[2],
+                                                        source_exp_.substr(terms.second[2],
                                                                            terms.second[2] - terms.second[3] + 1));
             left_app->parent_ = current_node;
             right_app->parent_ = current_node;
             current_node->SetLeft(left_app);
             current_node->SetRight(right_app);
             root_ = current_node;
-            BuildTree(left_app, terms.second[0], terms.second[1]);
-            BuildTree(right_app, terms.second[2], terms.second[3]);
+            BuildTreeNormal(left_app, terms.second[0], terms.second[1]);
+            BuildTreeNormal(right_app, terms.second[2], terms.second[3]);
         }
     } else {
         if (terms.first == TermType::kVar) {
-            auto current_node = std::make_shared<Var>(from->child_type_, expression_.substr(terms.second[0],
+            auto current_node = std::make_shared<Var>(from->child_type_, source_exp_.substr(terms.second[0],
                                                                                             terms.second[1] - terms.second[0] + 1));
             current_node->SetParent(from->GetParent());
             if (from->child_type_ == ChildType::kDown) {
@@ -148,10 +174,10 @@ void AbstractSyntaxTree::BuildTree(std::shared_ptr<TermNode> &from, size_t begin
             return;
         }
         if (terms.first == TermType::kAbs) {
-            auto current_node = std::make_shared<Abs>(from->child_type_, expression_.substr(terms.second[0],
+            auto current_node = std::make_shared<Abs>(from->child_type_, source_exp_.substr(terms.second[0],
                                                                                             terms.second[1] - terms.second[0] + 1));
             auto sub_term = std::make_shared<TermNode>(ChildType::kDown,
-                                                       expression_.substr(terms.second[2],
+                                                       source_exp_.substr(terms.second[2],
                                                                           terms.second[2] - terms.second[3] + 1));
             current_node->SetDown(sub_term);
             current_node->SetParent(from->GetParent());
@@ -166,15 +192,15 @@ void AbstractSyntaxTree::BuildTree(std::shared_ptr<TermNode> &from, size_t begin
                 auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                 parent->SetRight(current_node);
             }
-            return BuildTree(sub_term, terms.second[2], terms.second[3]);
+            return BuildTreeNormal(sub_term, terms.second[2], terms.second[3]);
         }
         if (terms.first == TermType::kApp) {
             auto current_node = std::make_shared<App>(from->child_type_);
             auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
-                                                       expression_.substr(terms.second[0],
+                                                       source_exp_.substr(terms.second[0],
                                                                           terms.second[1] - terms.second[0] + 1));
             auto right_app = std::make_shared<TermNode>(ChildType::kRight,
-                                                        expression_.substr(terms.second[2],
+                                                        source_exp_.substr(terms.second[2],
                                                                            terms.second[2] - terms.second[3] + 1));
             left_app->parent_ = current_node;
             right_app->parent_ = current_node;
@@ -192,10 +218,16 @@ void AbstractSyntaxTree::BuildTree(std::shared_ptr<TermNode> &from, size_t begin
                 auto parent = std::static_pointer_cast<App>(from->parent_.lock());
                 parent->SetRight(current_node);
             }
-            BuildTree(left_app, terms.second[0], terms.second[1]);
-            BuildTree(right_app, terms.second[2], terms.second[3]);
+            BuildTreeNormal(left_app, terms.second[0], terms.second[1]);
+            BuildTreeNormal(right_app, terms.second[2], terms.second[3]);
         }
     }
+}
+
+void AbstractSyntaxTree::BuildTreeDeBruijn(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
+}
+
+void AbstractSyntaxTree::BuildTreeHaskell(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
 }
 
 void AbstractSyntaxTree::CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars) {
@@ -397,6 +429,7 @@ std::pair<bool, std::shared_ptr<TermNode>> AbstractSyntaxTree::FindRedexInNormal
     }
     return {false, {}};
 }
+
 void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
     auto cur = std::static_pointer_cast<App>(from);
     auto term_to_reduce = std::static_pointer_cast<Abs>(cur->GetLeft());
@@ -426,24 +459,6 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
             }
         }
     }
-}
-
-AbstractSyntaxTree::AbstractSyntaxTree(const std::string &expression) : expression_(expression) {
-    root_ = std::make_shared<TermNode>(expression_);
-    BuildTree(root_, 0, expression_.size() - 1);
-    CalculateDeBruijnNotation(root_);
-}
-
-AbstractSyntaxTree::AbstractSyntaxTree(const AbstractSyntaxTree &other) : expression_(other.expression_),
-                                                                          name_context_(other.name_context_) {
-    root_ = other.CopySubTree(other.root_);
-}
-
-AbstractSyntaxTree &AbstractSyntaxTree::operator=(const AbstractSyntaxTree &other) {
-    expression_ = other.expression_;
-    name_context_ = other.name_context_;
-    root_ = other.CopySubTree(other.root_);
-    return *this;
 }
 
 std::vector<std::string> AbstractSyntaxTree::CallByValueReduction() {
@@ -579,4 +594,3 @@ const std::shared_ptr<TermNode> &AbstractSyntaxTree::GetRoot() const {
 std::shared_ptr<TermNode> &AbstractSyntaxTree::GetRoot() {
     return root_;
 }
-
