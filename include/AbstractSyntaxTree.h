@@ -16,6 +16,7 @@ private:
     void BuildTreeNormalStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
     void CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars = {});
 
+    std::pair<TermType, std::array<size_t, 4>> SplitIntoTermsHaskellStyle(size_t begin_idx, size_t end_idx);
     void BuildTreeHaskellStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
 
     void Shift(std::shared_ptr<TermNode> &from, int64_t d_pos, int64_t cutoff);

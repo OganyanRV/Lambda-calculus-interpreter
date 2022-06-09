@@ -2,12 +2,14 @@
 #include "../include/Syntax_functions.h"
 
 AbstractSyntaxTree::AbstractSyntaxTree(const std::string &expression, InputType input_type) : source_exp_(expression) {
+    source_exp_ = MakeCorrectForm(source_exp_, input_type);
     if (input_type == InputType::kNormal) {
-        source_exp_ = MakeCorrectForm(source_exp_);
         root_ = std::make_shared<TermNode>(source_exp_);
         BuildTreeNormalStyle(root_, 0, source_exp_.size() - 1);
         CalculateDeBruijnNotation(root_);
     } else if (input_type == InputType::kHaskell) {
+        root_ = std::make_shared<TermNode>(source_exp_);
+        BuildTreeHaskellStyle(root_, 0, source_exp_.size() - 1);
     }
 }
 
@@ -123,6 +125,68 @@ std::pair<TermType, std::array<size_t, 4>> AbstractSyntaxTree::SplitIntoTerms(si
     }
 }
 
+std::pair<TermType, std::array<size_t, 4>> AbstractSyntaxTree::SplitIntoTermsHaskellStyle(size_t begin_idx, size_t end_idx) {
+    std::array<size_t, 4> new_term_indexes;
+    TermType new_term_type;
+
+    size_t new_begin_idx = begin_idx;
+    size_t new_end_idx = end_idx;
+
+    size_t cur_index;
+    cur_index = new_begin_idx;
+    while ((source_exp_[cur_index] == ' ' || source_exp_[cur_index] == '(') && cur_index <= new_end_idx) {
+        ++cur_index;
+        ++new_begin_idx;
+    }
+
+    if (std::isdigit(source_exp_[cur_index])) {
+        new_begin_idx = cur_index;
+        while ((cur_index <= new_end_idx) && std::isdigit(source_exp_[cur_index])) {
+            ++cur_index;
+        }
+        new_end_idx = cur_index - 1;
+        new_term_type = TermType::kVar;
+        new_term_indexes[0] = new_begin_idx;
+        new_term_indexes[1] = new_end_idx;
+        return {new_term_type, new_term_indexes};
+    }
+
+    if (std::isalpha(source_exp_[cur_index])) {
+        std::string type_str{source_exp_[cur_index++]};
+        while ((cur_index <= new_end_idx) && std::isalpha(source_exp_[cur_index])) {
+            type_str += source_exp_[cur_index];
+            ++cur_index;
+        }
+        if (type_str == "Abs") {
+            while ((cur_index <= new_end_idx) && source_exp_[cur_index] != '(') {
+                ++cur_index;
+            }
+            new_end_idx = FindClosingBracket(cur_index + 1, end_idx);
+            new_term_type = TermType::kAbs;
+            new_term_indexes[2] = cur_index + 1;
+            new_term_indexes[3] = new_end_idx - 1;
+            return {new_term_type, new_term_indexes};
+        } else if (type_str == "App") {
+            while ((cur_index <= new_end_idx) && source_exp_[cur_index] != '(') {
+                ++cur_index;
+            }
+            new_end_idx = FindClosingBracket(cur_index + 1, end_idx);
+            new_term_type = TermType::kApp;
+            new_term_indexes[0] = cur_index + 1;
+            new_term_indexes[1] = new_end_idx - 1;
+            cur_index = new_end_idx + 1;
+            while ((cur_index <= new_end_idx) && source_exp_[cur_index] != '(') {
+                ++cur_index;
+            }
+            new_end_idx = FindClosingBracket(cur_index + 1, end_idx);
+            new_term_indexes[2] = cur_index + 1;
+            new_term_indexes[3] = new_end_idx - 1;
+            return {new_term_type, new_term_indexes};
+        }
+    }
+    return {new_term_type, new_term_indexes};
+}
+
 void AbstractSyntaxTree::BuildTreeNormalStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
     auto terms{SplitIntoTerms(begin_idx, end_idx)};
     if (root_ == from) {
@@ -228,6 +292,107 @@ void AbstractSyntaxTree::BuildTreeNormalStyle(std::shared_ptr<TermNode> &from, s
 }
 
 void AbstractSyntaxTree::BuildTreeHaskellStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
+    auto terms{SplitIntoTermsHaskellStyle(begin_idx, end_idx)};
+    if (root_ == from) {
+        if (terms.first == TermType::kVar) {
+            auto current_node = std::make_shared<Var>(source_exp_.substr(terms.second[0],
+                                                                         terms.second[1] - terms.second[0] + 1));
+            current_node->SetDeBruijnIndex(std::stoi(current_node->GetTerm()));
+            root_ = current_node;
+            return;
+        }
+        if (terms.first == TermType::kAbs) {
+            auto current_node = std::make_shared<Abs>();
+            auto sub_term = std::make_shared<TermNode>(ChildType::kDown,
+                                                       source_exp_.substr(terms.second[2],
+                                                                          terms.second[2] - terms.second[3] + 1));
+            current_node->SetDown(sub_term);
+            sub_term->SetParent(current_node);
+            root_ = current_node;
+            return BuildTreeHaskellStyle(sub_term, terms.second[2], terms.second[3]);
+        }
+        if (terms.first == TermType::kApp) {
+            auto current_node = std::make_shared<App>();
+            auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
+                                                       source_exp_.substr(terms.second[0],
+                                                                          terms.second[1] - terms.second[0] + 1));
+            auto right_app = std::make_shared<TermNode>(ChildType::kRight,
+                                                        source_exp_.substr(terms.second[2],
+                                                                           terms.second[2] - terms.second[3] + 1));
+            left_app->SetParent(current_node);
+            right_app->SetParent(current_node);
+            current_node->SetLeft(left_app);
+            current_node->SetRight(right_app);
+            root_ = current_node;
+            BuildTreeHaskellStyle(left_app, terms.second[0], terms.second[1]);
+            BuildTreeHaskellStyle(right_app, terms.second[2], terms.second[3]);
+        }
+    } else {
+        if (terms.first == TermType::kVar) {
+            auto current_node = std::make_shared<Var>(from->GetChildType(), source_exp_.substr(terms.second[0],
+                                                                                               terms.second[1] - terms.second[0] + 1));
+            current_node->SetDeBruijnIndex(std::stoi(current_node->GetTerm()));
+            current_node->SetParent(from->GetParent());
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
+                parent->SetDown(current_node);
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetLeft(current_node);
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetRight(current_node);
+            }
+            return;
+        }
+        if (terms.first == TermType::kAbs) {
+            auto current_node = std::make_shared<Abs>(from->GetChildType());
+            auto sub_term = std::make_shared<TermNode>(ChildType::kDown,
+                                                       source_exp_.substr(terms.second[2],
+                                                                          terms.second[2] - terms.second[3] + 1));
+            current_node->SetDown(sub_term);
+            current_node->SetParent(from->GetParent());
+            sub_term->SetParent(current_node);
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
+                parent->SetDown(current_node);
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetLeft(current_node);
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetRight(current_node);
+            }
+            return BuildTreeHaskellStyle(sub_term, terms.second[2], terms.second[3]);
+        }
+        if (terms.first == TermType::kApp) {
+            auto current_node = std::make_shared<App>(from->GetChildType());
+            auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
+                                                       source_exp_.substr(terms.second[0],
+                                                                          terms.second[1] - terms.second[0] + 1));
+            auto right_app = std::make_shared<TermNode>(ChildType::kRight,
+                                                        source_exp_.substr(terms.second[2],
+                                                                           terms.second[2] - terms.second[3] + 1));
+            left_app->SetParent(current_node);
+            right_app->SetParent(current_node);
+            current_node->SetLeft(left_app);
+            current_node->SetRight(right_app);
+            current_node->SetParent(from->GetParent());
+
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
+                parent->SetDown(current_node);
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetLeft(current_node);
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
+                parent->SetRight(current_node);
+            }
+            BuildTreeHaskellStyle(left_app, terms.second[0], terms.second[1]);
+            BuildTreeHaskellStyle(right_app, terms.second[2], terms.second[3]);
+        }
+    }
 }
 
 void AbstractSyntaxTree::CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars) {

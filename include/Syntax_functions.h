@@ -287,13 +287,40 @@ std::string PutBracketsInApplications(const std::string &term) {
     return corrected_term;
 }
 
+std::string PutBracketsAroundDeBruijnIndexes(const std::string &term) {
+    std::string corrected_term{term};
+    size_t begin_idx;
+    for (size_t idx = 0; idx < corrected_term.size(); ++idx) {
+        if (std::isdigit(corrected_term[idx])) {
+            begin_idx = idx;
+            while (idx < corrected_term.size() && std::isdigit(corrected_term[idx])) {
+                ++idx;
+            }
+            if (!begin_idx || (begin_idx && corrected_term[begin_idx - 1] != '(')) {
+                corrected_term = corrected_term.substr(0, begin_idx) + '(' +
+                                 corrected_term.substr(begin_idx,
+                                                       idx - begin_idx) +
+                                 ')' +
+                                 corrected_term.substr(idx,
+                                                       corrected_term.size() - idx);
+            }
+            idx += 2;
+        }
+    }
+    return corrected_term;
+}
+
 
 //  Makes appropriate form of expression
-std::string MakeCorrectForm(const std::string &term) {
+std::string MakeCorrectForm(const std::string &term, InputType input_type) {
     std::string corrected_term{term};
-    corrected_term = PutBracketsAroundLambdaAbstractions(corrected_term);
-    corrected_term = PutBracketsAroundSubTermsInLambdaAbstractions(corrected_term);
-    corrected_term = PutBracketsInApplications(corrected_term);
+    if (input_type == InputType::kNormal) {
+        corrected_term = PutBracketsAroundLambdaAbstractions(corrected_term);
+        corrected_term = PutBracketsAroundSubTermsInLambdaAbstractions(corrected_term);
+        corrected_term = PutBracketsInApplications(corrected_term);
+    } else if (input_type == InputType::kHaskell) {
+        corrected_term = PutBracketsAroundDeBruijnIndexes(corrected_term);
+    }
     return corrected_term;
 }
 
