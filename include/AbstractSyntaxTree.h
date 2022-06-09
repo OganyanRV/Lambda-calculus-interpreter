@@ -10,16 +10,13 @@ private:
     std::shared_ptr<TermNode> root_;
     std::string source_exp_;
     std::vector<char> name_context_;
-    //    const static int8_t kAlphabetSize = 26;//  Need also for naming context and de bruijn notation
-    //    std::vector<char> expression_vec;
 
     size_t FindClosingBracket(size_t begin_idx, size_t end_idx);
     std::pair<TermType, std::array<size_t, 4>> SplitIntoTerms(size_t begin_idx, size_t end_idx);
-    void BuildTreeNormal(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
+    void BuildTreeNormalStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
     void CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars = {});
 
-    void BuildTreeDeBruijn(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
-    void BuildTreeHaskell(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
+    void BuildTreeHaskellStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx);
 
     void Shift(std::shared_ptr<TermNode> &from, int64_t d_pos, int64_t cutoff);
     void Substitution(std::shared_ptr<TermNode> &term_to_reduce, std::shared_ptr<TermNode> &value, size_t j);
@@ -43,10 +40,7 @@ public:
     std::vector<std::string> CallByNameReduction();
     std::vector<std::string> NormalReduction();
 
-    std::string
-    ExprToString(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
-    std::string ExprToStringDBBrackets(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringHaskell(const std::shared_ptr<TermNode> &from);
 
     const std::shared_ptr<TermNode> &GetRoot() const;

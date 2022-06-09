@@ -64,6 +64,8 @@ public:
             return "";
         }
     }
+
+    std::
 };
 
 #endif //OGANYAN_LAMBDA_CALC_TERMS_LIB_H

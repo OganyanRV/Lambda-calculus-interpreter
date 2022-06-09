@@ -15,7 +15,6 @@ enum class ChildType {
 
 enum class InputType {
     kNormal,
-    kDeBruijn,
     kHaskell
 };
 

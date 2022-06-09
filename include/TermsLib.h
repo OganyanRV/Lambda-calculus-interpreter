@@ -1,10 +1,12 @@
 #ifndef OGANYAN_LAMBDA_CALC_TERMSLIB_H
 #define OGANYAN_LAMBDA_CALC_TERMSLIB_H
-#include <string>
 #include <map>
+#include <string>
+
 class TermsLib {
 private:
     std::map<std::string, std::string> combinators_lib_;
+
 public:
     TermsLib() {
         // Logical functions
@@ -47,13 +49,29 @@ public:
         return (combinators_lib_.find(term_name) != combinators_lib_.end());
     }
 
-    std::string operator[](const std::string &term_name){
+    std::string operator[](const std::string &term_name) {
         if (Exist(term_name)) {
             return combinators_lib_[term_name];
-        }
-        else {
+        } else {
             return "";
         }
+    }
+
+    std::string ChangeLibFuncsToTerms(std::string source_term) {
+        for (size_t idx = 0; idx < source_term.size(); ++idx) {
+            size_t begin_idx;
+            if (source_term[idx] >= 'A' && source_term[idx] <= 'Z') {
+                begin_idx = idx;
+                while (idx < source_term.size() && std::isalpha(source_term[idx])) {
+                    ++idx;
+                }
+                std::string lib_term = source_term.substr(begin_idx, idx - begin_idx);
+                std::string term_to_replace = combinators_lib_[lib_term];
+                source_term = source_term.substr(0, begin_idx) + term_to_replace + source_term.substr(idx);
+                idx = 0;
+            }
+        }
+        return source_term;
     }
 };
 #endif//OGANYAN_LAMBDA_CALC_TERMSLIB_H

@@ -1,5 +1,81 @@
-#ifndef OGANYAN_LAMBDA_CALC_PARSE_SYNTAX_H
-#define OGANYAN_LAMBDA_CALC_PARSE_SYNTAX_H
+#ifndef OGANYAN_LAMBDA_CALC_SYNTAX_FUNCTIONS_H
+#define OGANYAN_LAMBDA_CALC_SYNTAX_FUNCTIONS_H
+#include "Enums.h"
+#include <iostream>
+#include <string>
+#include <vector>
+
+//  Check if term is correctly written. If not, returns false and prints the mistake. It covers SOME mistakes.
+bool IsSyntaxCorrect(const std::string &term, InputType input_type) {
+
+    // Check for correct brackets
+    int brackets_count = 0;
+    for (auto elem : term) {
+        if (elem == '(') {
+            ++brackets_count;
+        } else if (elem == ')') {
+            --brackets_count;
+        }
+        if (brackets_count < 0) {
+            std::cout << "Invalid syntax: some ending brackets dont belong to opening brackets"
+                      << "\n";
+            return false;
+        }
+    }
+    if (brackets_count < 0) {
+        std::cout << "Invalid syntax: invalid syntax: too much of ending brackets"
+                  << "\n";
+        return false;
+    }
+    if (brackets_count > 0) {
+        std::cout << "Invalid syntax: invalid syntax: too much of opening brackets"
+                  << "\n";
+        return false;
+    }
+
+    //  Check for existing lambdas
+    if (input_type == InputType::kNormal) {
+        bool exist_lib_fun = false;
+        for (auto elem : term) {
+            if ((elem >= 'A' && elem <= 'Z')) {
+                exist_lib_fun = true;
+                break;
+            }
+        }
+        if (!exist_lib_fun) {
+            if (term.find("\\") == term.npos) {
+                std::cout << "There are no lambdas: nothing to reduce"
+                          << "\n";
+                return false;
+            }
+        }
+    } else if (input_type == InputType::kHaskell) {
+        if (term.find("Abs") == term.npos) {
+            std::cout << "There are no lambdas: nothing to reduce"
+                      << "\n";
+            return false;
+        }
+    }
+
+    //  Check for correct lambda-usages
+    if (input_type == InputType::kNormal) {
+        for (size_t idx = 0; idx < term.size() - 1; ++idx) {
+            if (term[idx] == '\\' && !isalpha(term[idx + 1])) {
+                std::cout << "Invalid syntax: there is no variable after lambda"
+                          << "\n";
+                return false;
+            }
+        }
+        if (term[term.size() - 1] == '\\') {
+            std::cout << "Invalid syntax: there is no variable after lambda"
+                      << "\n";
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 std::string PutBracketsAroundLambdaAbstractions(const std::string &term) {
     std::string corrected_term{term};
@@ -85,7 +161,6 @@ std::string PutBracketsAroundSubTermsInLambdaAbstractions(const std::string &ter
 std::string PutBracketsInApplications(const std::string &term) {
     std::string corrected_term{term};
 
-
     size_t count_of_inserted_brackets_pairs = 0;
     for (size_t pos_for_opening_bracket = 0;
          pos_for_opening_bracket < corrected_term.size(); ++pos_for_opening_bracket) {
@@ -158,10 +233,6 @@ std::string PutBracketsInApplications(const std::string &term) {
 
             pos_for_opening_bracket += count_of_inserted_brackets_pairs;
         }
-        //        else if (std::isalpha(corrected_term[pos_for_opening_bracket])) {
-        //        else if ((!pos_for_opening_bracket && std::isalpha(corrected_term[pos_for_opening_bracket]))
-        //                 || (std::isalpha(corrected_term[pos_for_opening_bracket]) && pos_for_opening_bracket
-        //                 && corrected_term[pos_for_opening_bracket - 1] != '\\')) {
 
         else if (std::isalpha(corrected_term[pos_for_opening_bracket]) &&
                  (!pos_for_opening_bracket ||
@@ -186,7 +257,6 @@ std::string PutBracketsInApplications(const std::string &term) {
 
                 if (corrected_term[j] == '(') {
                     int brackets_count = 0;
-                    int pos_for_ending_bracket = corrected_term.size();
                     ++j;
                     while (j < corrected_term.size()) {
                         if (corrected_term[j] == '(') {
@@ -195,7 +265,6 @@ std::string PutBracketsInApplications(const std::string &term) {
                             --brackets_count;
                         }
                         if (brackets_count < 0) {
-                            pos_for_ending_bracket = j;
                             break;
                         }
                         ++j;
@@ -218,28 +287,14 @@ std::string PutBracketsInApplications(const std::string &term) {
     return corrected_term;
 }
 
-std::string RemoveSpaces(const std::string &term) {
-    std::string new_term;
-    for (auto &elem : term) {
-        if (elem != ' ') {
-            new_term += elem;
-        }
-    }
-    return new_term;
-}
 
 //  Makes appropriate form of expression
 std::string MakeCorrectForm(const std::string &term) {
     std::string corrected_term{term};
-    //    std::cout << "Source expr: " << corrected_term << "\n";
     corrected_term = PutBracketsAroundLambdaAbstractions(corrected_term);
-    //    std::cout << "Expr after putting brackets arround abstractions: " << corrected_term << "\n";
     corrected_term = PutBracketsAroundSubTermsInLambdaAbstractions(corrected_term);
-    //    std::cout << "Expr after putting brackets arround subterm in abstractions: " << corrected_term << "\n";
     corrected_term = PutBracketsInApplications(corrected_term);
-    //    std::cout << "Expr after putting brackets in applications: " << corrected_term << "\n";
-    // Maybe make function for removing extra brackets
     return corrected_term;
 }
 
-#endif//OGANYAN_LAMBDA_CALC_PARSE_SYNTAX_H
+#endif//OGANYAN_LAMBDA_CALC_SYNTAX_FUNCTIONS_H

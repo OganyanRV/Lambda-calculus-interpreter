@@ -1,16 +1,19 @@
 #include "../include/AbstractSyntaxTree.h"
+#include "../include/Syntax_functions.h"
 
 AbstractSyntaxTree::AbstractSyntaxTree(const std::string &expression, InputType input_type) : source_exp_(expression) {
     if (input_type == InputType::kNormal) {
+        source_exp_ = MakeCorrectForm(source_exp_);
         root_ = std::make_shared<TermNode>(source_exp_);
-        BuildTreeNormal(root_, 0, source_exp_.size() - 1);
+        BuildTreeNormalStyle(root_, 0, source_exp_.size() - 1);
         CalculateDeBruijnNotation(root_);
+    } else if (input_type == InputType::kHaskell) {
     }
 }
 
-AbstractSyntaxTree::AbstractSyntaxTree(const std::shared_ptr<TermNode>& root) {
+AbstractSyntaxTree::AbstractSyntaxTree(const std::shared_ptr<TermNode> &root) {
     root_ = root;
-    source_exp_ = ExprToStringDB(root_);
+    source_exp_ = ExprToStringHaskell(root_);
 }
 
 AbstractSyntaxTree::AbstractSyntaxTree(const AbstractSyntaxTree &other) : source_exp_(other.source_exp_),
@@ -120,7 +123,7 @@ std::pair<TermType, std::array<size_t, 4>> AbstractSyntaxTree::SplitIntoTerms(si
     }
 }
 
-void AbstractSyntaxTree::BuildTreeNormal(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
+void AbstractSyntaxTree::BuildTreeNormalStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
     auto terms{SplitIntoTerms(begin_idx, end_idx)};
     if (root_ == from) {
         if (terms.first == TermType::kVar) {
@@ -138,7 +141,7 @@ void AbstractSyntaxTree::BuildTreeNormal(std::shared_ptr<TermNode> &from, size_t
             current_node->SetDown(sub_term);
             sub_term->SetParent(current_node);
             root_ = current_node;
-            return BuildTreeNormal(sub_term, terms.second[2], terms.second[3]);
+            return BuildTreeNormalStyle(sub_term, terms.second[2], terms.second[3]);
         }
         if (terms.first == TermType::kApp) {
             auto current_node = std::make_shared<App>();
@@ -148,98 +151,95 @@ void AbstractSyntaxTree::BuildTreeNormal(std::shared_ptr<TermNode> &from, size_t
             auto right_app = std::make_shared<TermNode>(ChildType::kRight,
                                                         source_exp_.substr(terms.second[2],
                                                                            terms.second[2] - terms.second[3] + 1));
-            left_app->parent_ = current_node;
-            right_app->parent_ = current_node;
+            left_app->SetParent(current_node);
+            right_app->SetParent(current_node);
             current_node->SetLeft(left_app);
             current_node->SetRight(right_app);
             root_ = current_node;
-            BuildTreeNormal(left_app, terms.second[0], terms.second[1]);
-            BuildTreeNormal(right_app, terms.second[2], terms.second[3]);
+            BuildTreeNormalStyle(left_app, terms.second[0], terms.second[1]);
+            BuildTreeNormalStyle(right_app, terms.second[2], terms.second[3]);
         }
     } else {
         if (terms.first == TermType::kVar) {
-            auto current_node = std::make_shared<Var>(from->child_type_, source_exp_.substr(terms.second[0],
-                                                                                            terms.second[1] - terms.second[0] + 1));
+            auto current_node = std::make_shared<Var>(from->GetChildType(), source_exp_.substr(terms.second[0],
+                                                                                               terms.second[1] - terms.second[0] + 1));
             current_node->SetParent(from->GetParent());
-            if (from->child_type_ == ChildType::kDown) {
-                auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
                 parent->SetDown(current_node);
-            } else if (from->child_type_ == ChildType::kLeft) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetLeft(current_node);
-            } else if (from->child_type_ == ChildType::kRight) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetRight(current_node);
             }
             return;
         }
         if (terms.first == TermType::kAbs) {
-            auto current_node = std::make_shared<Abs>(from->child_type_, source_exp_.substr(terms.second[0],
-                                                                                            terms.second[1] - terms.second[0] + 1));
+            auto current_node = std::make_shared<Abs>(from->GetChildType(), source_exp_.substr(terms.second[0],
+                                                                                               terms.second[1] - terms.second[0] + 1));
             auto sub_term = std::make_shared<TermNode>(ChildType::kDown,
                                                        source_exp_.substr(terms.second[2],
                                                                           terms.second[2] - terms.second[3] + 1));
             current_node->SetDown(sub_term);
             current_node->SetParent(from->GetParent());
             sub_term->SetParent(current_node);
-            if (from->child_type_ == ChildType::kDown) {
-                auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
                 parent->SetDown(current_node);
-            } else if (from->child_type_ == ChildType::kLeft) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetLeft(current_node);
-            } else if (from->child_type_ == ChildType::kRight) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetRight(current_node);
             }
-            return BuildTreeNormal(sub_term, terms.second[2], terms.second[3]);
+            return BuildTreeNormalStyle(sub_term, terms.second[2], terms.second[3]);
         }
         if (terms.first == TermType::kApp) {
-            auto current_node = std::make_shared<App>(from->child_type_);
+            auto current_node = std::make_shared<App>(from->GetChildType());
             auto left_app = std::make_shared<TermNode>(ChildType::kLeft,
                                                        source_exp_.substr(terms.second[0],
                                                                           terms.second[1] - terms.second[0] + 1));
             auto right_app = std::make_shared<TermNode>(ChildType::kRight,
                                                         source_exp_.substr(terms.second[2],
                                                                            terms.second[2] - terms.second[3] + 1));
-            left_app->parent_ = current_node;
-            right_app->parent_ = current_node;
+            left_app->SetParent(current_node);
+            right_app->SetParent(current_node);
             current_node->SetLeft(left_app);
             current_node->SetRight(right_app);
             current_node->SetParent(from->GetParent());
 
-            if (from->child_type_ == ChildType::kDown) {
-                auto parent = std::static_pointer_cast<Abs>(from->parent_.lock());
+            if (from->GetChildType() == ChildType::kDown) {
+                auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
                 parent->SetDown(current_node);
-            } else if (from->child_type_ == ChildType::kLeft) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kLeft) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetLeft(current_node);
-            } else if (from->child_type_ == ChildType::kRight) {
-                auto parent = std::static_pointer_cast<App>(from->parent_.lock());
+            } else if (from->GetChildType() == ChildType::kRight) {
+                auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
                 parent->SetRight(current_node);
             }
-            BuildTreeNormal(left_app, terms.second[0], terms.second[1]);
-            BuildTreeNormal(right_app, terms.second[2], terms.second[3]);
+            BuildTreeNormalStyle(left_app, terms.second[0], terms.second[1]);
+            BuildTreeNormalStyle(right_app, terms.second[2], terms.second[3]);
         }
     }
 }
 
-void AbstractSyntaxTree::BuildTreeDeBruijn(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
-}
-
-void AbstractSyntaxTree::BuildTreeHaskell(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
+void AbstractSyntaxTree::BuildTreeHaskellStyle(std::shared_ptr<TermNode> &from, size_t begin_idx, size_t end_idx) {
 }
 
 void AbstractSyntaxTree::CalculateDeBruijnNotation(const std::shared_ptr<TermNode> &from, std::vector<char> bound_vars) {
-    if (from->type_ == TermType::kApp) {
+    if (from->GetType() == TermType::kApp) {
         auto cur = std::static_pointer_cast<App>(from);
         CalculateDeBruijnNotation(cur->GetLeft(), bound_vars);
         CalculateDeBruijnNotation(cur->GetRight(), bound_vars);
-    } else if (from->type_ == TermType::kAbs) {
+    } else if (from->GetType() == TermType::kAbs) {
         auto cur = std::static_pointer_cast<Abs>(from);
         bound_vars.push_back(cur->GetTerm()[1]);
         CalculateDeBruijnNotation(cur->GetDown(), bound_vars);
-    } else if (from->type_ == TermType::kVar) {
+    } else if (from->GetType() == TermType::kVar) {
         auto cur = std::static_pointer_cast<Var>(from);
         char cur_var = cur->GetTerm()[0];
 
@@ -273,16 +273,16 @@ void AbstractSyntaxTree::CalculateDeBruijnNotation(const std::shared_ptr<TermNod
 }
 
 void AbstractSyntaxTree::Shift(std::shared_ptr<TermNode> &from, int64_t d_pos, int64_t cutoff) {
-    if (from->type_ == TermType::kVar) {
+    if (from->GetType() == TermType::kVar) {
         auto cur = std::static_pointer_cast<Var>(from);
-        if (cur->GetDeBruijnIndex() >= cutoff) {
+        if (static_cast<int64_t>(cur->GetDeBruijnIndex()) >= cutoff) {
             cur->SetDeBruijnIndex(cur->GetDeBruijnIndex() + d_pos);
         }
-    } else if (from->type_ == TermType::kAbs) {
+    } else if (from->GetType() == TermType::kAbs) {
         auto cur = std::static_pointer_cast<Abs>(from);
         Shift(cur->GetDown(), d_pos, cutoff + 1);
 
-    } else if (from->type_ == TermType::kApp) {
+    } else if (from->GetType() == TermType::kApp) {
         auto cur = std::static_pointer_cast<App>(from);
         Shift(cur->GetLeft(), d_pos, cutoff);
         Shift(cur->GetRight(), d_pos, cutoff);
@@ -290,17 +290,17 @@ void AbstractSyntaxTree::Shift(std::shared_ptr<TermNode> &from, int64_t d_pos, i
 }
 
 void AbstractSyntaxTree::Substitution(std::shared_ptr<TermNode> &term_to_reduce, std::shared_ptr<TermNode> &value, size_t j) {
-    if (term_to_reduce->type_ == TermType::kVar) {
+    if (term_to_reduce->GetType() == TermType::kVar) {
         auto cur = std::static_pointer_cast<Var>(term_to_reduce);
         if (cur->GetDeBruijnIndex() == j) {
             auto parent = cur->GetParent().lock();
             auto new_value = CopySubTree(value);
-            if (parent->type_ == TermType::kAbs) {
+            if (parent->GetType() == TermType::kAbs) {
                 new_value->SetChildType(ChildType::kDown);
                 auto parent_downcast = std::static_pointer_cast<Abs>(parent);
                 new_value->SetParent(parent_downcast);
                 parent_downcast->SetDown(new_value);
-            } else if (parent->type_ == TermType::kApp) {
+            } else if (parent->GetType() == TermType::kApp) {
                 auto parent_downcast = std::static_pointer_cast<App>(parent);
                 new_value->SetParent(parent_downcast);
                 if (cur->GetChildType() == ChildType::kLeft) {
@@ -312,12 +312,12 @@ void AbstractSyntaxTree::Substitution(std::shared_ptr<TermNode> &term_to_reduce,
                 }
             }
         }
-    } else if (term_to_reduce->type_ == TermType::kAbs) {
+    } else if (term_to_reduce->GetType() == TermType::kAbs) {
         auto cur = std::static_pointer_cast<Abs>(term_to_reduce);
         auto new_value = CopySubTree(value);
         Shift(new_value, 1, 0);
         Substitution(cur->GetDown(), new_value, j + 1);
-    } else if (term_to_reduce->type_ == TermType::kApp) {
+    } else if (term_to_reduce->GetType() == TermType::kApp) {
         auto cur = std::static_pointer_cast<App>(term_to_reduce);
         Substitution(cur->GetLeft(), value, j);
         Substitution(cur->GetRight(), value, j);
@@ -331,7 +331,7 @@ std::shared_ptr<TermNode> AbstractSyntaxTree::CopySubTree(const std::shared_ptr<
 }
 
 void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_node, const std::shared_ptr<TermNode> &from) const {
-    if (from->type_ == TermType::kVar) {
+    if (from->GetType() == TermType::kVar) {
         auto parent = copy_node->GetParent();
         copy_node = std::make_shared<Var>(from->GetChildType(), from->GetTerm());
         auto cur_copy_node = std::static_pointer_cast<Var>(copy_node);
@@ -339,7 +339,7 @@ void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_no
         cur_copy_node->SetParent(parent);
         cur_copy_node->SetIsFree(cur_source_node->IsFree());
         cur_copy_node->SetDeBruijnIndex(cur_source_node->GetDeBruijnIndex());
-    } else if (from->type_ == TermType::kAbs) {
+    } else if (from->GetType() == TermType::kAbs) {
         auto parent = copy_node->GetParent();
         copy_node = std::make_shared<Abs>(from->GetChildType(), from->GetTerm());
         auto cur_copy_node = std::static_pointer_cast<Abs>(copy_node);
@@ -349,7 +349,7 @@ void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_no
         cur_copy_node->SetDown(std::shared_ptr<TermNode>(cur_source_node->GetDown()));
         cur_copy_node->GetDown()->SetParent(cur_copy_node);
         CopySubTreeRecursive(cur_copy_node->GetDown(), cur_source_node->GetDown());
-    } else if (from->type_ == TermType::kApp) {
+    } else if (from->GetType() == TermType::kApp) {
         auto parent = copy_node->GetParent();
         copy_node = std::make_shared<App>(from->GetChildType(), from->GetTerm());
         auto cur_copy_node = std::static_pointer_cast<App>(copy_node);
@@ -442,18 +442,18 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
         root_ = new_reduced_node;
         root_->SetParent({});
     } else {
-        if (from->GetParent().lock()->type_ == TermType::kAbs) {
+        if (from->GetParent().lock()->GetType() == TermType::kAbs) {
             auto parent = std::static_pointer_cast<Abs>(from->GetParent().lock());
             parent->SetDown(new_reduced_node);
             new_reduced_node->SetParent(parent);
             new_reduced_node->SetChildType(ChildType::kDown);
-        } else if (from->GetParent().lock()->type_ == TermType::kApp) {
+        } else if (from->GetParent().lock()->GetType() == TermType::kApp) {
             auto parent = std::static_pointer_cast<App>(from->GetParent().lock());
             new_reduced_node->SetParent(parent);
-            if (from->child_type_ == ChildType::kLeft) {
+            if (from->GetChildType() == ChildType::kLeft) {
                 new_reduced_node->SetChildType(ChildType::kLeft);
                 parent->SetLeft(new_reduced_node);
-            } else if (from->child_type_ == ChildType::kRight) {
+            } else if (from->GetChildType() == ChildType::kRight) {
                 new_reduced_node->SetChildType(ChildType::kRight);
                 parent->SetRight(new_reduced_node);
             }
@@ -518,52 +518,17 @@ std::vector<std::string> AbstractSyntaxTree::NormalReduction() {
     return reduction_steps;
 }
 
-std::string AbstractSyntaxTree::ExprToString(const std::shared_ptr<TermNode> &from) {
-    if (from->type_ == TermType::kApp) {
-        auto cur = std::static_pointer_cast<App>(from);
-        auto left_str = ExprToString(cur->GetLeft());
-        auto right_str = ExprToString(cur->GetRight());
-        return "(" + left_str + " " + right_str + ")";
-    } else if (from->type_ == TermType::kAbs) {
-        auto cur = std::static_pointer_cast<Abs>(from);
-        auto down_str = ExprToString(cur->GetDown());
-        return "(" + cur->GetTerm() + " " + "(" + down_str + ")" + ")";
-    } else if (from->type_ == TermType::kVar) {
-        auto cur = std::static_pointer_cast<Var>(from);
-        return cur->GetTerm();
-    }
-    return {};
-}
-
 std::string AbstractSyntaxTree::ExprToStringDB(const std::shared_ptr<TermNode> &from) {
-    if (from->type_ == TermType::kApp) {
+    if (from->GetType() == TermType::kApp) {
         auto cur = std::static_pointer_cast<App>(from);
         auto left_str = ExprToStringDB(cur->GetLeft());
         auto right_str = ExprToStringDB(cur->GetRight());
         return "(" + left_str + " " + right_str + ")";
-        //            return left_str + " " + right_str;
-    } else if (from->type_ == TermType::kAbs) {
+    } else if (from->GetType() == TermType::kAbs) {
         auto cur = std::static_pointer_cast<Abs>(from);
         auto down_str = ExprToStringDB(cur->GetDown());
         return "(" + std::string("\\ ") + down_str + ")";
-    } else if (from->type_ == TermType::kVar) {
-        auto cur = std::static_pointer_cast<Var>(from);
-        return std::to_string(cur->GetDeBruijnIndex());
-    }
-    return {};
-}
-
-std::string AbstractSyntaxTree::ExprToStringDBBrackets(const std::shared_ptr<TermNode> &from) {
-    if (from->type_ == TermType::kApp) {
-        auto cur = std::static_pointer_cast<App>(from);
-        auto left_str = ExprToStringDBBrackets(cur->GetLeft());
-        auto right_str = ExprToStringDBBrackets(cur->GetRight());
-        return "(" + left_str + " " + right_str + ")";
-    } else if (from->type_ == TermType::kAbs) {
-        auto cur = std::static_pointer_cast<Abs>(from);
-        auto down_str = ExprToStringDBBrackets(cur->GetDown());
-        return "(" + std::string("\\") + std::string(" ") + "(" + down_str + ")" + ")";
-    } else if (from->type_ == TermType::kVar) {
+    } else if (from->GetType() == TermType::kVar) {
         auto cur = std::static_pointer_cast<Var>(from);
         return std::to_string(cur->GetDeBruijnIndex());
     }
@@ -571,16 +536,16 @@ std::string AbstractSyntaxTree::ExprToStringDBBrackets(const std::shared_ptr<Ter
 }
 
 std::string AbstractSyntaxTree::ExprToStringHaskell(const std::shared_ptr<TermNode> &from) {
-    if (from->type_ == TermType::kApp) {
+    if (from->GetType() == TermType::kApp) {
         auto cur = std::static_pointer_cast<App>(from);
         auto left_str = ExprToStringHaskell(cur->GetLeft());
         auto right_str = ExprToStringHaskell(cur->GetRight());
         return "(App " + left_str + " " + right_str + ")";
-    } else if (from->type_ == TermType::kAbs) {
+    } else if (from->GetType() == TermType::kAbs) {
         auto cur = std::static_pointer_cast<Abs>(from);
         auto down_str = ExprToStringHaskell(cur->GetDown());
         return "(Abs " + down_str + ")";
-    } else if (from->type_ == TermType::kVar) {
+    } else if (from->GetType() == TermType::kVar) {
         auto cur = std::static_pointer_cast<Var>(from);
         return std::to_string(cur->GetDeBruijnIndex());
     }
