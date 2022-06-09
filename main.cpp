@@ -19,46 +19,76 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
         auto call_by_value_reduction = tree1.CallByValueReduction();
-        for (auto &step : call_by_value_reduction) {
+        if (!call_by_value_reduction.first) {
+            call_by_value_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+            return call_by_value_reduction.second;
+        }
+        for (auto &step : call_by_value_reduction.second) {
             std::cout << step << std::endl;
         }
-        return call_by_value_reduction;
+        return call_by_value_reduction.second;
     } else if (strategy_type == StrategyType::kCallByName) {
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
         auto call_by_name_reduction = tree2.CallByNameReduction();
-        for (auto &step : call_by_name_reduction) {
+        if (!call_by_name_reduction.first) {
+            call_by_name_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+            return call_by_name_reduction.second;
+        }
+        for (auto &step : call_by_name_reduction.second) {
             std::cout << step << std::endl;
         }
-        return call_by_name_reduction;
+        return call_by_name_reduction.second;
     } else if (strategy_type == StrategyType::kNormal) {
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
         auto normal_reduction = tree3.NormalReduction();
-        for (auto &step : normal_reduction) {
+        if (!normal_reduction.first) {
+            normal_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+            return normal_reduction.second;
+        }
+        for (auto &step : normal_reduction.second) {
             std::cout << step << std::endl;
         }
-        return normal_reduction;
+        return normal_reduction.second;
     } else if (strategy_type == StrategyType::kAll) {
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
         auto call_by_value_reduction = tree1.CallByValueReduction();
-        for (auto &step : call_by_value_reduction) {
-            std::cout << step << std::endl;
+        if (!call_by_value_reduction.first) {
+            call_by_value_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+        } else {
+            for (auto &step : call_by_value_reduction.second) {
+                std::cout << step << std::endl;
+            }
         }
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
         auto call_by_name_reduction = tree2.CallByNameReduction();
-        for (auto &step : call_by_name_reduction) {
-            std::cout << step << std::endl;
+        if (!call_by_name_reduction.first) {
+            call_by_name_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+        } else {
+            for (auto &step : call_by_name_reduction.second) {
+                std::cout << step << std::endl;
+            }
         }
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
         auto normal_reduction = tree3.NormalReduction();
-        for (auto &step : normal_reduction) {
-            std::cout << step << std::endl;
+        if (!normal_reduction.first) {
+            normal_reduction.second.push_back("Term has no normal form");
+            std::cout << "Term has no normal form" << std::endl;
+        } else {
+            for (auto &step : normal_reduction.second) {
+                std::cout << step << std::endl;
+            }
         }
-        return normal_reduction;
+        return normal_reduction.second;
     }
     return {};
 }

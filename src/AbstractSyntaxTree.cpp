@@ -626,61 +626,58 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
     }
 }
 
-std::vector<std::string> AbstractSyntaxTree::CallByValueReduction() {
+std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::CallByValueReduction(size_t limit) {
     std::vector<std::string> reduction_steps;
     reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    while (true) {
+    size_t count_of_reduction_steps = 0;
+    while (count_of_reduction_steps++ < limit) {
         auto redex = FindRedexInCallByValue(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
         reduction_steps.push_back(ExprToStringHaskell(this->root_));
-
-        if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
-            reduction_steps.pop_back();
-            break;
-        }
     }
-    return reduction_steps;
+    if (count_of_reduction_steps >= limit) {
+        return {false, reduction_steps};
+    }
+    return {true, reduction_steps};
 }
 
-std::vector<std::string> AbstractSyntaxTree::CallByNameReduction() {
+std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::CallByNameReduction(size_t limit) {
     std::vector<std::string> reduction_steps;
     reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    while (true) {
+    size_t count_of_reduction_steps = 0;
+    while (count_of_reduction_steps++ < limit) {
         auto redex = FindRedexInCallByName(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
         reduction_steps.push_back(ExprToStringHaskell(this->root_));
-
-        if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
-            reduction_steps.pop_back();
-            break;
-        }
     }
-    return reduction_steps;
+    if (count_of_reduction_steps >= limit) {
+        return {false, reduction_steps};
+    }
+    return {true, reduction_steps};
 }
 
-std::vector<std::string> AbstractSyntaxTree::NormalReduction() {
+std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::NormalReduction(size_t limit) {
     std::vector<std::string> reduction_steps;
     reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    while (true) {
+    size_t count_of_reduction_steps = 0;
+    while (count_of_reduction_steps++ < limit) {
         auto redex = FindRedexInNormalStrategy(this->root_);
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
         reduction_steps.push_back(ExprToStringHaskell(this->root_));
-
-        if (reduction_steps[reduction_steps.size() - 1] == reduction_steps[reduction_steps.size() - 2]) {
-            reduction_steps.pop_back();
-            break;
-        }
     }
-    return reduction_steps;
+    if (count_of_reduction_steps >= limit) {
+        return {false, reduction_steps};
+    }
+    return {true, reduction_steps};
 }
 
 std::string AbstractSyntaxTree::ExprToStringDB(const std::shared_ptr<TermNode> &from) {

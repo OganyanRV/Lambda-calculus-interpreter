@@ -37,9 +37,9 @@ public:
     AbstractSyntaxTree &operator=(const AbstractSyntaxTree &other);
     virtual ~AbstractSyntaxTree() = default;
 
-    std::vector<std::string> CallByValueReduction();
-    std::vector<std::string> CallByNameReduction();
-    std::vector<std::string> NormalReduction();
+    std::pair<bool, std::vector<std::string>> CallByValueReduction(size_t limit = 1000);
+    std::pair<bool, std::vector<std::string>> CallByNameReduction(size_t limit = 1000);
+    std::pair<bool, std::vector<std::string>> NormalReduction(size_t limit = 1000);
 
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringHaskell(const std::shared_ptr<TermNode> &from);
