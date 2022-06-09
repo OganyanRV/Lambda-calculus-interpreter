@@ -13,17 +13,16 @@ void AverageReductionChainLength() {
         for (int64_t term_num = terms_generator.GetCount(term_size - 1, 1);
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
-            std::cout << term_size << " " << 0 << " " << term_num<<std::endl;
-            auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
+            std::cout << term_size << " " << 0 << " " << term_num << std::endl;
+            auto str = terms_generator.GenerateTermStr(term_size, 0, term_num);
+            auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
+            //            auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
             //            std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-            auto reductions = tree.NormalReduction();
+            auto reductions = tree.NormalReduction(term_size * 50);
             if (!reductions.first) {
                 no_normal_form_terms.push_back(reductions.second.front());
                 continue;
             }
-            //            for (auto &step : reductions.second) {
-            //                std::cout << step << "\n";
-            //            }
             cur_lengths.push_back(reductions.second.size() - 1);
         }
         double sum = 0;
@@ -37,22 +36,45 @@ void AverageReductionChainLength() {
     for (size_t idx = 0; idx < average_lengths.size(); ++idx) {
         std::cout << average_lengths[idx] << " ";
     }
+    std::cout << "\n";
+    for (auto &el : no_normal_form_terms) {
+        std::cout << el << "\n";
+    }
+}
+
+void FindMinBrokenTree() {
+    int kek = 14;
+    for (size_t term_size = 1; term_size <= kek; ++term_size) {
+        std::vector<int64_t> cur_lengths;
+        for (int64_t term_num = 1;
+             term_num <= terms_generator.GetCount(term_size, 0);
+             ++term_num) {
+            std::cout << term_size << " " << 0 << " " << term_num << std::endl;
+            //            auto str = terms_generator.GenerateTermStr(term_size, 0, term_num);
+            //            auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
+            auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
+            std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
+            auto reductions = tree.NormalReduction(5);
+            //            if (!reductions.first) {
+            //                no_normal_form_terms.push_back(reductions.second.front());
+            //                continue;
+            //            }
+        }
+    }
+}
+
+void DebugBuilding() {
+    int n, m, k;
+    std::cin >> n >> m >> k;
+    auto str = terms_generator.GenerateTermStr(n, m, k);
+    auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
+    auto tree1 = terms_generator.GenerateTerm(n, m, k);
+    //    std::cout << tree1.ExprToStringHaskell(tree.GetRoot()) << std::endl;
+    auto reductions = tree1.NormalReduction(5);
 }
 int main() {
-    AverageReductionChainLength();
-    //    while (true) {
-    //        size_t term_size, max_free_var_cnt;
-    //        int64_t number_of_term;
-    //        std::cin >> term_size >> max_free_var_cnt >> number_of_term;
-    //        std::cout << terms_generator.GenerateTermStr(term_size, max_free_var_cnt, number_of_term) << std::endl;
-    //
-    //        auto tree = terms_generator.GenerateTerm(term_size, max_free_var_cnt, number_of_term);
-    //        std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-    //        auto reductions = tree.NormalReduction();
-    //        for (auto &step : reductions) {
-    //            std::cout << step << "\n";
-    //        }
-    //        //        std::cout<<tree.ExprToStringHaskell(tree.GetRoot()) <<std::endl;
-    //        //        return 0;
-    //    }
+    //    AverageReductionChainLength();
+        FindMinBrokenTree();
+
+//    DebugBuilding();
 }

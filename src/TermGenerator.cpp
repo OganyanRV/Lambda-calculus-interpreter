@@ -85,8 +85,8 @@ std::shared_ptr<TermNode> TermGenerator::AppTerm(size_t max_free_var_cnt, size_t
         int64_t dv = (h - 1) / tnjm;
         int64_t md = (h - 1) % tnjm;
         auto app = std::make_shared<App>();
-        auto left_term = UnRankT(j, max_free_var_cnt, dv + 1, from);
-        auto right_term = UnRankT(term_size - j, max_free_var_cnt, md + 1, from);
+        auto left_term = UnRankT(j, max_free_var_cnt, dv + 1, app);
+        auto right_term = UnRankT(term_size - j, max_free_var_cnt, md + 1, app);
 
         app->SetLeft(left_term);
         app->SetRight(right_term);
