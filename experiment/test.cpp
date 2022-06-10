@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 
+#include <filesystem>
+#include <fstream>
+
 TermGenerator terms_generator;
 
 void AverageReductionChainLength() {
@@ -45,63 +48,63 @@ void AverageReductionChainLength() {
     }
 }
 
-void FindMinBrokenTree() {
-    int kek = 14;
-    for (size_t term_size = 1; term_size <= kek; ++term_size) {
-        std::vector<int64_t> cur_lengths;
-        for (int64_t term_num = 1;
-             term_num <= terms_generator.GetCount(term_size, 0);
-             ++term_num) {
-            std::cout << term_size << " " << 0 << " " << term_num << std::endl;
-            //            auto str = terms_generator.GenerateTermStr(term_size, 0, term_num);
-            //            auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
-            auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-            std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-//            auto reductions = tree.NormalReduction(5);
-            //            if (!reductions.first) {
-            //                no_normal_form_terms.push_back(reductions.second.front());
-            //                continue;
-            //            }
-        }
-    }
-}
 
-void DebugBuilding() {
-    int n, m, k;
-    std::cin >> n >> m >> k;
-    auto str = terms_generator.GenerateTermStr(n, m, k);
-    auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
-    auto tree1 = terms_generator.GenerateTerm(n, m, k);
-    //    std::cout << tree1.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-//    auto reductions = tree1.NormalReduction(5);
-}
+void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
+    //    bool is_new_file = !std::filesystem::exists(path);
+    //std::ios::in | std::iso::app
+    std::ofstream file(path, std::ios::trunc);
+    file << "size_of_term,number_of_term,"
+            "steps_count,size_biggest_term_in_steps,size_reduced,"
+            "cycled_reduction,increasing_reduction,has_normal_form\n";
 
-void CalculateRatiosOfNormalForms() {
-    size_t max_size_of_term = 8;
-    std::vector<int64_t> no_normal_form_terms_count(max_size_of_term, 0);
+
+    size_t max_size_of_term = 7;
 
     for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
         for (int64_t term_num = 1;
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
             auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-            auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 20);
+            auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, 65536);
+            file << term_size << "," << term_num << ",";
             if (!reductions.first) {
-                no_normal_form_terms_count[term_size - 1]++;
-                std::cout<<"Found one. " << term_size << " " << term_num <<std::endl;
-            }
-//            std::cout<<"Passed. " << term_size << " " << term_num <<std::endl;
-        }
-        for (auto &el : no_normal_form_terms_count) {
-            std::cout << el << " ";
-        }
-        std::cout<<"\n";
+                if (reductions.second.second.size() >= term_size * 15 - 1) {
+                    file << ",,,"
+                         << "False,True,False";
+                } else {
+                    file << ",,,"
+                         << "True,False,False";
+                }
 
-        for (size_t idx = 0; idx < no_normal_form_terms_count.size(); ++idx) {
-            std::cout<< static_cast<double>(no_normal_form_terms_count[idx])
-                                 / terms_generator.GetCount(idx + 1, 0)<<" ";
+            } else {
+                int64_t biggest_term_in_step = 0;
+                auto &steps_size = reductions.second.second;
+                for (size_t idx = 0; idx < steps_size.size(); ++idx) {
+                    biggest_term_in_step = std::max(biggest_term_in_step, steps_size[idx]);
+                }
+                file << steps_size.size() - 1 << "," << biggest_term_in_step << "," << *(--steps_size.end()) << ",False,False,True";
+            }
+            file << "\n";
         }
-        std::cout<<std::endl;
+    }
+}
+
+void TestFileOutput() {
+    /*
+ * size_t max_size_of_term = 7;
+std::vector<int64_t> no_normal_form_terms_count(max_size_of_term, 0);
+
+for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
+    for (int64_t term_num = 1;
+         term_num <= terms_generator.GetCount(term_size, 0);
+         ++term_num) {
+        auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
+        auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, 65536);
+        if (!reductions.first) {
+            no_normal_form_terms_count[term_size - 1]++;
+            std::cout<<"Found one. " << term_size << " " << term_num <<std::endl;
+        }
+        //            std::cout<<"Passed. " << term_size << " " << term_num <<std::endl;
     }
     for (auto &el : no_normal_form_terms_count) {
         std::cout << el << " ";
@@ -114,18 +117,27 @@ void CalculateRatiosOfNormalForms() {
     }
     std::cout<<std::endl;
 }
+for (auto &el : no_normal_form_terms_count) {
+    std::cout << el << " ";
+}
+std::cout<<"\n";
 
-void TestFileOutput() {
-
+for (size_t idx = 0; idx < no_normal_form_terms_count.size(); ++idx) {
+    std::cout<< static_cast<double>(no_normal_form_terms_count[idx])
+                         / terms_generator.GetCount(idx + 1, 0)<<" ";
+}
+std::cout<<std::endl;
+ */
 }
 
 int main() {
-    CalculateRatiosOfNormalForms();
+    std::filesystem::path base_path{"/home/ogrob/diplom/Diploma/experiment"};
 
-    TestFileOutput();
+    CalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv");
+    //    AverageReductionChainLength(base_path / "normal_form_ratios.csv");
+
+    //    TestFileOutput();
 
     //    AverageReductionChainLength();
     //        FindMinBrokenTree();
-    //
-    ////    DebugBuilding();
 }

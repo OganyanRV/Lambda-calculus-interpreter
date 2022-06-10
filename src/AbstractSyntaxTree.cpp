@@ -629,7 +629,7 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
 std::pair<bool, std::pair<std::vector<std::string>,
                           std::vector<int64_t>>>
 AbstractSyntaxTree::BetaReduction(StrategyType strategy_type, size_t steps_limit,
-                                        size_t term_size_limit) {
+                                  size_t term_size_limit) {
     std::vector<std::string> reduction_steps;
     std::vector<int64_t> term_sizes;
 
@@ -664,7 +664,7 @@ AbstractSyntaxTree::BetaReduction(StrategyType strategy_type, size_t steps_limit
         ++count_of_reduction_steps;
     }
 
-    if ((count_of_reduction_steps >= term_size_limit) ||
+    if ((count_of_reduction_steps >= steps_limit) ||
         (term_sizes[count_of_reduction_steps] >= static_cast<int64_t>(term_size_limit))) {
         return {false, {reduction_steps, term_sizes}};
     }
