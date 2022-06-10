@@ -32,17 +32,19 @@ private:
 
 public:
     AbstractSyntaxTree(const std::string &expression, InputType input_type = InputType::kNormal);
-    AbstractSyntaxTree(const std::shared_ptr<TermNode>& root);
+    AbstractSyntaxTree(const std::shared_ptr<TermNode> &root);
     AbstractSyntaxTree(const AbstractSyntaxTree &other);
     AbstractSyntaxTree &operator=(const AbstractSyntaxTree &other);
     virtual ~AbstractSyntaxTree() = default;
 
-    std::pair<bool, std::vector<std::string>> CallByValueReduction(size_t limit = 1000);
-    std::pair<bool, std::vector<std::string>> CallByNameReduction(size_t limit = 1000);
-    std::pair<bool, std::vector<std::string>> NormalReduction(size_t limit = 1000);
+    std::pair<bool, std::pair<std::vector<std::string>,
+                              std::vector<int64_t>>>
+    BetaReduction(StrategyType strategy_type, size_t steps_limit = 1000, size_t term_size_limit = 2049);
 
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringHaskell(const std::shared_ptr<TermNode> &from);
+
+    int64_t CalculateTermSize(const std::shared_ptr<TermNode> &from);
 
     const std::shared_ptr<TermNode> &GetRoot() const;
     std::shared_ptr<TermNode> &GetRoot();

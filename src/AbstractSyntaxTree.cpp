@@ -626,58 +626,61 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
     }
 }
 
-std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::CallByValueReduction(size_t limit) {
+std::pair<bool, std::pair<std::vector<std::string>,
+                          std::vector<int64_t>>>
+AbstractSyntaxTree::BetaReduction(StrategyType strategy_type, size_t steps_limit,
+                                        size_t term_size_limit) {
     std::vector<std::string> reduction_steps;
+    std::vector<int64_t> term_sizes;
+
     reduction_steps.push_back(ExprToStringHaskell(this->root_));
+    term_sizes.push_back(CalculateTermSize(root_));
+
     size_t count_of_reduction_steps = 0;
-    while (count_of_reduction_steps++ < limit) {
-        auto redex = FindRedexInCallByValue(this->root_);
+    while ((count_of_reduction_steps < steps_limit) &&
+           (term_sizes[count_of_reduction_steps] < static_cast<int64_t>(term_size_limit))) {
+
+        std::pair<bool, std::shared_ptr<TermNode>> redex = {};
+        if (strategy_type == StrategyType::kNormal) {
+            redex = FindRedexInNormalStrategy(this->root_);
+        } else if (strategy_type == StrategyType::kCallByName) {
+            redex = FindRedexInCallByName(this->root_);
+        } else if (strategy_type == StrategyType::kCallByValue) {
+            redex = FindRedexInCallByValue(this->root_);
+        }
+
         if (!redex.first) {
             break;
         }
         MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringHaskell(this->root_));
+
+        auto reduced_term = ExprToStringHaskell(this->root_);
+        if (std::find(reduction_steps.begin(), reduction_steps.end(), reduced_term) == reduction_steps.end()) {
+            reduction_steps.push_back(reduced_term);
+            term_sizes.push_back(CalculateTermSize(root_));
+        } else {
+            return {false, {reduction_steps, term_sizes}};
+        }
+        ++count_of_reduction_steps;
     }
-    if (count_of_reduction_steps >= limit) {
-        return {false, reduction_steps};
+
+    if ((count_of_reduction_steps >= term_size_limit) ||
+        (term_sizes[count_of_reduction_steps] >= static_cast<int64_t>(term_size_limit))) {
+        return {false, {reduction_steps, term_sizes}};
     }
-    return {true, reduction_steps};
+    return {true, {reduction_steps, term_sizes}};
 }
 
-std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::CallByNameReduction(size_t limit) {
-    std::vector<std::string> reduction_steps;
-    reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    size_t count_of_reduction_steps = 0;
-    while (count_of_reduction_steps++ < limit) {
-        auto redex = FindRedexInCallByName(this->root_);
-        if (!redex.first) {
-            break;
-        }
-        MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringHaskell(this->root_));
+int64_t AbstractSyntaxTree::CalculateTermSize(const std::shared_ptr<TermNode> &from) {
+    if (from->GetType() == TermType::kAbs) {
+        return 1 + CalculateTermSize(std::static_pointer_cast<Abs>(from)->GetDown());
     }
-    if (count_of_reduction_steps >= limit) {
-        return {false, reduction_steps};
+    if (from->GetType() == TermType::kApp) {
+        auto left_term_size = CalculateTermSize(std::static_pointer_cast<App>(from)->GetLeft());
+        auto right_term_size = CalculateTermSize(std::static_pointer_cast<App>(from)->GetRight());
+        return 1 + left_term_size + right_term_size;
     }
-    return {true, reduction_steps};
-}
-
-std::pair<bool, std::vector<std::string>> AbstractSyntaxTree::NormalReduction(size_t limit) {
-    std::vector<std::string> reduction_steps;
-    reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    size_t count_of_reduction_steps = 0;
-    while (count_of_reduction_steps++ < limit) {
-        auto redex = FindRedexInNormalStrategy(this->root_);
-        if (!redex.first) {
-            break;
-        }
-        MakeReductionStep(redex.second);
-        reduction_steps.push_back(ExprToStringHaskell(this->root_));
-    }
-    if (count_of_reduction_steps >= limit) {
-        return {false, reduction_steps};
-    }
-    return {true, reduction_steps};
+    return 0;
 }
 
 std::string AbstractSyntaxTree::ExprToStringDB(const std::shared_ptr<TermNode> &from) {

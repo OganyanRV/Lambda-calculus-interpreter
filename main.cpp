@@ -18,77 +18,77 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
     if (strategy_type == StrategyType::kCallByValue) {
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
-        auto call_by_value_reduction = tree1.CallByValueReduction();
+        auto call_by_value_reduction = tree1.BetaReduction(StrategyType::kCallByValue);
         if (!call_by_value_reduction.first) {
-            call_by_value_reduction.second.push_back("Term has no normal form");
+            call_by_value_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
-            return call_by_value_reduction.second;
+            return call_by_value_reduction.second.first;
         }
-        for (auto &step : call_by_value_reduction.second) {
+        for (auto &step : call_by_value_reduction.second.first) {
             std::cout << step << std::endl;
         }
-        return call_by_value_reduction.second;
+        return call_by_value_reduction.second.first;
     } else if (strategy_type == StrategyType::kCallByName) {
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
-        auto call_by_name_reduction = tree2.CallByNameReduction();
+        auto call_by_name_reduction = tree2.BetaReduction(StrategyType::kCallByName);
         if (!call_by_name_reduction.first) {
-            call_by_name_reduction.second.push_back("Term has no normal form");
+            call_by_name_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
-            return call_by_name_reduction.second;
+            return call_by_name_reduction.second.first;
         }
-        for (auto &step : call_by_name_reduction.second) {
+        for (auto &step : call_by_name_reduction.second.first) {
             std::cout << step << std::endl;
         }
-        return call_by_name_reduction.second;
+        return call_by_name_reduction.second.first;
     } else if (strategy_type == StrategyType::kNormal) {
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
-        auto normal_reduction = tree3.NormalReduction();
+        auto normal_reduction = tree3.BetaReduction(StrategyType::kNormal);
         if (!normal_reduction.first) {
-            normal_reduction.second.push_back("Term has no normal form");
+            normal_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
-            return normal_reduction.second;
+            return normal_reduction.second.first;
         }
-        for (auto &step : normal_reduction.second) {
+        for (auto &step : normal_reduction.second.first) {
             std::cout << step << std::endl;
         }
-        return normal_reduction.second;
+        return normal_reduction.second.first;
     } else if (strategy_type == StrategyType::kAll) {
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
-        auto call_by_value_reduction = tree1.CallByValueReduction();
+        auto call_by_value_reduction = tree1.BetaReduction(StrategyType::kCallByValue);
         if (!call_by_value_reduction.first) {
-            call_by_value_reduction.second.push_back("Term has no normal form");
+            call_by_value_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
         } else {
-            for (auto &step : call_by_value_reduction.second) {
+            for (auto &step : call_by_value_reduction.second.first) {
                 std::cout << step << std::endl;
             }
         }
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
-        auto call_by_name_reduction = tree2.CallByNameReduction();
+        auto call_by_name_reduction = tree2.BetaReduction(StrategyType::kCallByName);
         if (!call_by_name_reduction.first) {
-            call_by_name_reduction.second.push_back("Term has no normal form");
+            call_by_name_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
         } else {
-            for (auto &step : call_by_name_reduction.second) {
+            for (auto &step : call_by_name_reduction.second.first) {
                 std::cout << step << std::endl;
             }
         }
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
-        auto normal_reduction = tree3.NormalReduction();
+        auto normal_reduction = tree3.BetaReduction(StrategyType::kNormal);
         if (!normal_reduction.first) {
-            normal_reduction.second.push_back("Term has no normal form");
+            normal_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
         } else {
-            for (auto &step : normal_reduction.second) {
+            for (auto &step : normal_reduction.second.first) {
                 std::cout << step << std::endl;
             }
         }
-        return normal_reduction.second;
+        return normal_reduction.second.first;
     }
     return {};
 }
