@@ -57,7 +57,7 @@ void FindMinBrokenTree() {
             //            auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
             auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
             std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-            auto reductions = tree.NormalReduction(5);
+//            auto reductions = tree.NormalReduction(5);
             //            if (!reductions.first) {
             //                no_normal_form_terms.push_back(reductions.second.front());
             //                continue;
@@ -73,24 +73,24 @@ void DebugBuilding() {
     auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
     auto tree1 = terms_generator.GenerateTerm(n, m, k);
     //    std::cout << tree1.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-    auto reductions = tree1.NormalReduction(5);
+//    auto reductions = tree1.NormalReduction(5);
 }
 
 void CalculateRatiosOfNormalForms() {
-    size_t max_size_of_term = 10;
+    size_t max_size_of_term = 8;
     std::vector<int64_t> no_normal_form_terms_count(max_size_of_term, 0);
 
-    for (size_t term_size = 9; term_size <= max_size_of_term; ++term_size) {
-        for (int64_t term_num = 5075999;
+    for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
+        for (int64_t term_num = 1;
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
             auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-            auto reductions = tree.NormalReduction(term_size * 5);
+            auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 20);
             if (!reductions.first) {
                 no_normal_form_terms_count[term_size - 1]++;
                 std::cout<<"Found one. " << term_size << " " << term_num <<std::endl;
             }
-            std::cout<<"Passed. " << term_size << " " << term_num <<std::endl;
+//            std::cout<<"Passed. " << term_size << " " << term_num <<std::endl;
         }
         for (auto &el : no_normal_form_terms_count) {
             std::cout << el << " ";
