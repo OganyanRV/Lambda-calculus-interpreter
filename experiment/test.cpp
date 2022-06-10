@@ -5,52 +5,198 @@
 
 #include <filesystem>
 #include <fstream>
+#include <random>
+#include <set>
 
 TermGenerator terms_generator;
 
-void AverageReductionChainLength() {
-    std::vector<double> average_lengths;
-    std::vector<std::string> no_normal_form_terms;
-    size_t max_size_of_term = 7;
-    for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
-        std::vector<int64_t> cur_lengths;
+void Reduction(std::ofstream &file_norm, std::ofstream &file_val, std::ofstream &file_name,
+               size_t term_size, int64_t term_num, int64_t limit) {
+    auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
+
+    auto tree_norm = tree;
+    auto tree_val = tree;
+    auto tree_name = tree;
+
+    file_norm << term_size << "," << term_num << ",";
+    file_val << term_size << "," << term_num << ",";
+    file_name << term_size << "," << term_num << ",";
+
+
+    auto reductions_norm = tree_norm.BetaReduction(
+            StrategyType::kNormal, term_size * 15, 2048);
+
+    if (!reductions_norm.first) {
+        if (reductions_norm.second.second.size() >= term_size * 15 - 1) {
+            file_norm << ",,,"
+                      << "False,True,False";
+        } else {
+            file_norm << ",,,"
+                      << "True,False,False";
+        }
+
+    } else {
+        int64_t biggest_term_in_step = 0;
+        auto &steps_size = reductions_norm.second.second;
+        for (size_t idx = 0; idx < steps_size.size(); ++idx) {
+            biggest_term_in_step = std::max(biggest_term_in_step, steps_size[idx]);
+        }
+        file_norm << steps_size.size() - 1 << "," << biggest_term_in_step << "," << *(--steps_size.end()) << ",False,False,True";
+    }
+
+
+    auto reductions_val = tree_val.BetaReduction(
+            StrategyType::kCallByValue, term_size * 15, limit);
+
+    if (!reductions_val.first) {
+        if (reductions_val.second.second.size() >= term_size * 15 - 1) {
+            file_val << ",,,"
+                     << "False,True,False";
+        } else {
+            file_val << ",,,"
+                     << "True,False,False";
+        }
+
+    } else {
+        int64_t biggest_term_in_step = 0;
+        auto &steps_size = reductions_val.second.second;
+        for (size_t idx = 0; idx < steps_size.size(); ++idx) {
+            biggest_term_in_step = std::max(biggest_term_in_step, steps_size[idx]);
+        }
+        file_val << steps_size.size() - 1 << "," << biggest_term_in_step << "," << *(--steps_size.end()) << ",False,False,True";
+    }
+
+    auto reductions_name = tree_name.BetaReduction(
+            StrategyType::kCallByName, term_size * 15, 2048);
+
+    if (!reductions_name.first) {
+        if (reductions_name.second.second.size() >= term_size * 15 - 1) {
+            file_name << ",,,"
+                      << "False,True,False";
+        } else {
+            file_name << ",,,"
+                      << "True,False,False";
+        }
+
+    } else {
+        int64_t biggest_term_in_step = 0;
+        auto &steps_size = reductions_name.second.second;
+        for (size_t idx = 0; idx < steps_size.size(); ++idx) {
+            biggest_term_in_step = std::max(biggest_term_in_step, steps_size[idx]);
+        }
+        file_name << steps_size.size() - 1 << "," << biggest_term_in_step << "," << *(--steps_size.end()) << ",False,False,True";
+    }
+
+    file_norm << ",True";
+    if (*(--reductions_val.second.first.end()) == *(--reductions_norm.second.first.end())) {
+        file_norm << ",True";
+        file_val << ",True,True";
+    } else {
+        file_norm << ",False";
+        file_val << ",False,True";
+    }
+
+    if (*(--reductions_name.second.first.end()) == *(--reductions_norm.second.first.end())) {
+        file_norm << ",True";
+        file_name << ",True";
+    } else {
+        file_norm << ",False";
+        file_name << ",False";
+    }
+
+    if (*(--reductions_name.second.first.end()) == *(--reductions_val.second.first.end())) {
+        file_val << ",True";
+        file_name << ",True,True";
+    } else {
+        file_val << ",False";
+        file_name << ",False,True";
+    }
+
+    file_norm << "\n";
+    file_val << "\n";
+    file_name << "\n";
+}
+
+void AverageReductionChainLength(const std::filesystem::path &path_norm,
+                                 const std::filesystem::path &path_val,
+                                 const std::filesystem::path &path_name) {
+    std::ofstream file_norm(path_norm, std::ios::trunc);
+    file_norm << "size_of_term,number_of_term,"
+                 "steps_count,size_biggest_term_in_steps,size_reduced,"
+                 "cycled_reduction,increasing_reduction,has_normal_form,"
+              << "is_same_norm,is_same_val,is_same_name\n";
+
+    std::ofstream file_val(path_val, std::ios::trunc);
+    file_val << "size_of_term,number_of_term,"
+                "steps_count,size_biggest_term_in_steps,size_reduced,"
+                "cycled_reduction,increasing_reduction,has_normal_form,"
+             << "is_same_norm,is_same_val,is_same_name\n";
+
+    std::ofstream file_name(path_name, std::ios::trunc);
+    file_name << "size_of_term,number_of_term,"
+                 "steps_count,size_biggest_term_in_steps,size_reduced,"
+                 "cycled_reduction,increasing_reduction,has_normal_form,"
+              << "is_same_norm,is_same_val,is_same_name\n";
+
+    for (size_t term_size = 1; term_size <= 9; ++term_size) {
+        std::cout << "started " << term_size << std::endl;
 
         for (int64_t term_num = terms_generator.GetCount(term_size - 1, 1);
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
-            std::cout << term_size << " " << 0 << " " << term_num << std::endl;
-            //            auto str = terms_generator.GenerateTermStr(term_size, 0, term_num);
-            //            auto tree = AbstractSyntaxTree(str, InputType::kHaskell);
-            auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-            std::cout << tree.ExprToStringHaskell(tree.GetRoot()) << std::endl;
-            assert(static_cast<int8_t>(term_size) == tree.CalculateTermSize(tree.GetRoot()));
-            //            auto reductions = tree.NormalReduction(term_size * 50);
-            //            if (!reductions.first) {
-            //                no_normal_form_terms.push_back(reductions.second.front());
-            //                continue;
-            //            }
-            //            cur_lengths.push_back(reductions.second.size() - 1);
+
+            Reduction(file_norm, file_val, file_name, term_size, term_num, 2048);
         }
-        double sum = 0;
-        for (size_t idx = 0; idx < cur_lengths.size(); ++idx) {
-            sum += cur_lengths[idx];
-            //            std::cout<< cur_lengths[idx]<<" ";
+    }
+
+    for (size_t term_size = 10; term_size <= 12; ++term_size) {
+        std::cout << "started " << term_size << std::endl;
+        std::mt19937 gen(154461);
+        std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
+                                                   terms_generator.GetCount(term_size, 0));
+        std::set<size_t> random_terms_indexes;
+        while (random_terms_indexes.size() != 30000) {
+            random_terms_indexes.insert(dist(gen));
         }
-        //        std::cout<<"\n";
-        average_lengths.push_back(sum / cur_lengths.size());
+
+        for (auto &term_num : random_terms_indexes) {
+            Reduction(file_norm, file_val, file_name, term_size, term_num, 4096);
+        }
     }
-    for (size_t idx = 0; idx < average_lengths.size(); ++idx) {
-        std::cout << average_lengths[idx] << " ";
+
+    for (size_t term_size = 13; term_size <= 15; ++term_size) {
+        std::cout << "started " << term_size << std::endl;
+        std::mt19937 gen(154461);
+        std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
+                                                   terms_generator.GetCount(term_size, 0));
+        std::set<size_t> random_terms_indexes;
+        while (random_terms_indexes.size() != 10000) {
+            random_terms_indexes.insert(dist(gen));
+        }
+
+        for (auto &term_num : random_terms_indexes) {
+            Reduction(file_norm, file_val, file_name, term_size, term_num, 8192);
+        }
     }
-    std::cout << "\n";
-    for (auto &el : no_normal_form_terms) {
-        std::cout << el << "\n";
+
+    for (size_t term_size = 16; term_size <= 18; ++term_size) {
+        std::cout << "started " << term_size << std::endl;
+        std::mt19937 gen(154461);
+        std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
+                                                   terms_generator.GetCount(term_size, 0));
+        std::set<size_t> random_terms_indexes;
+        while (random_terms_indexes.size() != 1000) {
+            random_terms_indexes.insert(dist(gen));
+        }
+
+        for (auto &term_num : random_terms_indexes) {
+            Reduction(file_norm, file_val, file_name, term_size, term_num, 8192);
+        }
     }
 }
 
 
 void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
-    //    bool is_new_file = !std::filesystem::exists(path);
     //std::ios::in | std::iso::app
     std::ofstream file(path, std::ios::trunc);
     file << "size_of_term,number_of_term,"
@@ -58,14 +204,18 @@ void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
             "cycled_reduction,increasing_reduction,has_normal_form\n";
 
 
-    size_t max_size_of_term = 7;
+    size_t max_size_of_term = 10;
+    size_t term_size_limit = 2048;
 
     for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
+        if (term_size == 10) {
+            term_size_limit = 4096;
+        }
         for (int64_t term_num = 1;
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
             auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-            auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, 65536);
+            auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, term_size_limit);
             file << term_size << "," << term_num << ",";
             if (!reductions.first) {
                 if (reductions.second.second.size() >= term_size * 15 - 1) {
@@ -89,55 +239,12 @@ void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
     }
 }
 
-void TestFileOutput() {
-    /*
- * size_t max_size_of_term = 7;
-std::vector<int64_t> no_normal_form_terms_count(max_size_of_term, 0);
-
-for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
-    for (int64_t term_num = 1;
-         term_num <= terms_generator.GetCount(term_size, 0);
-         ++term_num) {
-        auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
-        auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, 65536);
-        if (!reductions.first) {
-            no_normal_form_terms_count[term_size - 1]++;
-            std::cout<<"Found one. " << term_size << " " << term_num <<std::endl;
-        }
-        //            std::cout<<"Passed. " << term_size << " " << term_num <<std::endl;
-    }
-    for (auto &el : no_normal_form_terms_count) {
-        std::cout << el << " ";
-    }
-    std::cout<<"\n";
-
-    for (size_t idx = 0; idx < no_normal_form_terms_count.size(); ++idx) {
-        std::cout<< static_cast<double>(no_normal_form_terms_count[idx])
-                             / terms_generator.GetCount(idx + 1, 0)<<" ";
-    }
-    std::cout<<std::endl;
-}
-for (auto &el : no_normal_form_terms_count) {
-    std::cout << el << " ";
-}
-std::cout<<"\n";
-
-for (size_t idx = 0; idx < no_normal_form_terms_count.size(); ++idx) {
-    std::cout<< static_cast<double>(no_normal_form_terms_count[idx])
-                         / terms_generator.GetCount(idx + 1, 0)<<" ";
-}
-std::cout<<std::endl;
- */
-}
 
 int main() {
     std::filesystem::path base_path{"/home/ogrob/diplom/Diploma/experiment"};
 
     CalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv");
-    //    AverageReductionChainLength(base_path / "normal_form_ratios.csv");
-
-    //    TestFileOutput();
-
-    //    AverageReductionChainLength();
-    //        FindMinBrokenTree();
+    AverageReductionChainLength(base_path / "normal_strat.csv",
+                                base_path / "call_by_value.csv",
+                                base_path / "call_by_name.csv");
 }
