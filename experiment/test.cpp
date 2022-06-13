@@ -1,5 +1,4 @@
 #include "../include/TermGenerator.h"
-#include <cassert>
 #include <iostream>
 #include <string>
 
@@ -155,7 +154,7 @@ void AverageReductionChainLength(const std::filesystem::path &path_norm,
         std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
                                                    terms_generator.GetCount(term_size, 0));
         std::set<size_t> random_terms_indexes;
-        while (random_terms_indexes.size() != 30000) {
+        while (random_terms_indexes.size() != 500000) {
             random_terms_indexes.insert(dist(gen));
         }
 
@@ -170,7 +169,7 @@ void AverageReductionChainLength(const std::filesystem::path &path_norm,
         std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
                                                    terms_generator.GetCount(term_size, 0));
         std::set<size_t> random_terms_indexes;
-        while (random_terms_indexes.size() != 10000) {
+        while (random_terms_indexes.size() != 250000) {
             random_terms_indexes.insert(dist(gen));
         }
 
@@ -185,12 +184,12 @@ void AverageReductionChainLength(const std::filesystem::path &path_norm,
         std::uniform_int_distribution<size_t> dist(terms_generator.GetCount(term_size - 1, 1),
                                                    terms_generator.GetCount(term_size, 0));
         std::set<size_t> random_terms_indexes;
-        while (random_terms_indexes.size() != 1000) {
+        while (random_terms_indexes.size() != 100000) {
             random_terms_indexes.insert(dist(gen));
         }
 
         for (auto &term_num : random_terms_indexes) {
-            Reduction(file_norm, file_val, file_name, term_size, term_num, 8192);
+            Reduction(file_norm, file_val, file_name, term_size, term_num, 12000);
         }
     }
 }
@@ -208,6 +207,7 @@ void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
     size_t term_size_limit = 2048;
 
     for (size_t term_size = 1; term_size <= max_size_of_term; ++term_size) {
+        std::cout << "started " << term_size << std::endl;
         if (term_size == 10) {
             term_size_limit = 4096;
         }
@@ -239,12 +239,12 @@ void CalculateRatiosOfNormalForms(const std::filesystem::path &path) {
     }
 }
 
-
 int main() {
     std::filesystem::path base_path{"/home/ogrob/diplom/Diploma/experiment"};
 
-    CalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv");
     AverageReductionChainLength(base_path / "normal_strat.csv",
                                 base_path / "call_by_value.csv",
                                 base_path / "call_by_name.csv");
+
+    CalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv");
 }
