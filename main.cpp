@@ -189,23 +189,23 @@ void ProcessRequest(const std::string &request) {
         std::cout << "2. Be accurate with brackets. Do not mess up with brackets"
                   << "\n";
         std::cout
-                << "3. There are some checks for correct syntax, but they dont cover all possible mistake."
+                << "3. There are some checks for correct syntax, but they dont cover all possible mistakes."
                    " Do your best to not make any mistakes"
                 << "\n";
         std::cout << "4. The Interpreter supports 2 types of input: classic term "
                      "and haskell-style term"
                   << "\n\t4.1 Classic term:"
                   << "\n\t\t4.1.1 Variables can only be named with single cursive letters"
-                  << "\n\t\t4.1.2 Applications splits with spaces."
-                  << "\n\t\t4.1.3 Abstractions looks like this: \\x z x y, where x is formal parameter "
+                  << "\n\t\t4.1.2 Applications split with spaces."
+                  << "\n\t\t4.1.3 Abstractions look like this: \\x z x y, where x is formal parameter "
                      "and 'z x y' is abstraction's body"
                   << "\n\t\t4.1.4 Example: (\\x x) (\\y y)"
 
                   << "\n\t4.2 Haskell-style term:"
                   << "\n\t\t4.2.1 Variables can only be named with numbers"
-                  << "\n\t\t4.2.2 Applications splits with spaces."
-                  << "\n\t\t4.2.3 Applications looks like this: App(term term)"
-                  << "\n\t\t4.2.4 Abstractions looks like this: Abs(term)"
+                  << "\n\t\t4.2.2 Applications split with spaces."
+                  << "\n\t\t4.2.3 Applications look like this: App(term term)"
+                  << "\n\t\t4.2.4 Abstractions look like this: Abs(term)"
                   << "\n\t\t4.2.5 Example: (App((Abs(0) (Abs(0)))"
                   << "\n";
 
