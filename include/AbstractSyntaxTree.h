@@ -35,11 +35,11 @@ public:
     AbstractSyntaxTree(const std::shared_ptr<TermNode> &root);
     AbstractSyntaxTree(const AbstractSyntaxTree &other);
     AbstractSyntaxTree &operator=(const AbstractSyntaxTree &other);
-    virtual ~AbstractSyntaxTree() = default;
+    ~AbstractSyntaxTree() = default;
 
     std::pair<bool, std::pair<std::vector<std::string>,
                               std::vector<int64_t>>>
-    BetaReduction(StrategyType strategy_type, size_t steps_limit = 200, size_t term_size_limit = 2048);
+    BetaReduction(StrategyType strategy_type, size_t steps_limit = 200, size_t term_size_limit = 8048);
 
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
     std::string ExprToStringHaskell(const std::shared_ptr<TermNode> &from);

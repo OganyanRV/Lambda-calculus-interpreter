@@ -307,7 +307,7 @@ void ProcessRequest(const std::string &request) {
 
 
 int main() {
-    std::cout << "Created by @OganyanRV on 2022" << std::endl;
+    std::cout << "Created by @OganyanRV in 2022" << std::endl;
     while (true) {
         std::cout << "-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n";
         std::cout << "Choose the option of lambda-calculus interpreter:"
