@@ -19,10 +19,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
         auto call_by_value_reduction = tree1.BetaReduction(StrategyType::kCallByValue);
-        if (!call_by_value_reduction.first) {
+        if (call_by_value_reduction.first != NormalFormType::kExisting) {
             call_by_value_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
-            return call_by_value_reduction.second.first;
+            std::cout << (call_by_value_reduction.first == NormalFormType::kCycling
+                    ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                      : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                      " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
         }
         for (auto &step : call_by_value_reduction.second.first) {
             std::cout << step << std::endl;
@@ -32,9 +35,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
         auto call_by_name_reduction = tree2.BetaReduction(StrategyType::kCallByName);
-        if (!call_by_name_reduction.first) {
+        if (call_by_name_reduction.first != NormalFormType::kExisting) {
             call_by_name_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
+            std::cout << (call_by_name_reduction.first == NormalFormType::kCycling
+                                  ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                                  : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                                    " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
             return call_by_name_reduction.second.first;
         }
         for (auto &step : call_by_name_reduction.second.first) {
@@ -45,9 +52,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
         auto normal_reduction = tree3.BetaReduction(StrategyType::kNormal);
-        if (!normal_reduction.first) {
+        if (normal_reduction.first != NormalFormType::kExisting) {
             normal_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
+            std::cout << (normal_reduction.first == NormalFormType::kCycling
+                                  ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                                  : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                                    " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
             return normal_reduction.second.first;
         }
         for (auto &step : normal_reduction.second.first) {
@@ -58,9 +69,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree1 = tree;
         std::cout << "Steps of beta-reduction in Call By Value strategy: " << std::endl;
         auto call_by_value_reduction = tree1.BetaReduction(StrategyType::kCallByValue);
-        if (!call_by_value_reduction.first) {
+        if (call_by_value_reduction.first != NormalFormType::kExisting) {
             call_by_value_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
+            std::cout << (call_by_value_reduction.first == NormalFormType::kCycling
+                                  ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                                  : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                                    " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
         } else {
             for (auto &step : call_by_value_reduction.second.first) {
                 std::cout << step << std::endl;
@@ -69,9 +84,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree2 = tree;
         std::cout << "Steps of beta-reduction in Call By Name strategy: " << std::endl;
         auto call_by_name_reduction = tree2.BetaReduction(StrategyType::kCallByName);
-        if (!call_by_name_reduction.first) {
+        if (call_by_name_reduction.first != NormalFormType::kExisting) {
             call_by_name_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
+            std::cout << (call_by_name_reduction.first == NormalFormType::kCycling
+                                  ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                                  : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                                    " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
         } else {
             for (auto &step : call_by_name_reduction.second.first) {
                 std::cout << step << std::endl;
@@ -80,9 +99,13 @@ std::vector<std::string> BetaReduction(std::string term, InputType input_type, S
         auto tree3 = tree;
         std::cout << "Steps of beta-reduction in Normal strategy: " << std::endl;
         auto normal_reduction = tree3.BetaReduction(StrategyType::kNormal);
-        if (!normal_reduction.first) {
+        if (normal_reduction.first != NormalFormType::kExisting) {
             normal_reduction.second.first.push_back("Term has no normal form");
             std::cout << "Term has no normal form" << std::endl;
+            std::cout << (normal_reduction.first == NormalFormType::kCycling
+                                  ? "Cycling type of non-existence of normal form. Term for sure does not have normal form"
+                                  : "Increasing type of non-existence of normal form. Existence of normal form depends on limits such as"
+                                    " steps_count_limit and max_size_of_reduced_term_limit")<<std::endl;
         } else {
             for (auto &step : normal_reduction.second.first) {
                 std::cout << step << std::endl;
@@ -304,7 +327,6 @@ void ProcessRequest(const std::string &request) {
         StartBetaReductionMenu();
     }
 }
-
 
 int main() {
     std::cout << "Created by @OganyanRV in 2022" << std::endl;

@@ -25,4 +25,10 @@ enum class StrategyType {
     kAll
 };
 
+enum class NormalFormType {
+    kExisting,
+    kCycling,
+    kIncreasing
+};
+
 #endif//OGANYAN_LAMBDA_CALC_ENUMS_H

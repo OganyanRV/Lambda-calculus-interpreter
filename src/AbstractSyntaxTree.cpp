@@ -626,20 +626,20 @@ void AbstractSyntaxTree::MakeReductionStep(std::shared_ptr<TermNode> &from) {
     }
 }
 
-std::pair<bool, std::pair<std::vector<std::string>,
-                          std::vector<int64_t>>>
+std::pair<NormalFormType, std::pair<std::vector<std::string>,
+                                                      std::vector<int64_t>>>
 AbstractSyntaxTree::BetaReduction(StrategyType strategy_type, size_t steps_limit,
                                   size_t term_size_limit) {
     std::vector<std::string> reduction_steps;
     std::vector<int64_t> term_sizes;
 
     reduction_steps.push_back(ExprToStringHaskell(this->root_));
-//    reduction_steps.push_back(ExprToStringDB(this->root_));
+    //    reduction_steps.push_back(ExprToStringDB(this->root_));
     term_sizes.push_back(CalculateTermSize(root_));
 
     size_t count_of_reduction_steps = 0;
-    while ((count_of_reduction_steps < steps_limit) &&
-           (term_sizes[count_of_reduction_steps] < static_cast<int64_t>(term_size_limit))) {
+    while ((count_of_reduction_steps <= steps_limit) &&
+           (term_sizes[count_of_reduction_steps] <= static_cast<int64_t>(term_size_limit))) {
 
         std::pair<bool, std::shared_ptr<TermNode>> redex = {};
         if (strategy_type == StrategyType::kNormal) {
@@ -656,21 +656,21 @@ AbstractSyntaxTree::BetaReduction(StrategyType strategy_type, size_t steps_limit
         MakeReductionStep(redex.second);
 
         auto reduced_term = ExprToStringHaskell(this->root_);
-//        auto reduced_term = ExprToStringDB(this->root_);
+        //        auto reduced_term = ExprToStringDB(this->root_);
         if (std::find(reduction_steps.begin(), reduction_steps.end(), reduced_term) == reduction_steps.end()) {
             reduction_steps.push_back(reduced_term);
             term_sizes.push_back(CalculateTermSize(root_));
         } else {
-            return {false, {reduction_steps, term_sizes}};
+            return {NormalFormType::kCycling, {reduction_steps, term_sizes}};
         }
         ++count_of_reduction_steps;
     }
 
-    if ((count_of_reduction_steps >= steps_limit) ||
-        (term_sizes[count_of_reduction_steps] >= static_cast<int64_t>(term_size_limit))) {
-        return {false, {reduction_steps, term_sizes}};
+    if ((count_of_reduction_steps > steps_limit) ||
+        (term_sizes[count_of_reduction_steps] > static_cast<int64_t>(term_size_limit))) {
+        return {NormalFormType::kIncreasing, {reduction_steps, term_sizes}};
     }
-    return {true, {reduction_steps, term_sizes}};
+    return {NormalFormType::kExisting, {reduction_steps, term_sizes}};
 }
 
 int64_t AbstractSyntaxTree::CalculateTermSize(const std::shared_ptr<TermNode> &from) {

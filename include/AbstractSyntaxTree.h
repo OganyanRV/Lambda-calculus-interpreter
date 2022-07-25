@@ -37,8 +37,8 @@ public:
     AbstractSyntaxTree &operator=(const AbstractSyntaxTree &other);
     ~AbstractSyntaxTree() = default;
 
-    std::pair<bool, std::pair<std::vector<std::string>,
-                              std::vector<int64_t>>>
+    std::pair<NormalFormType, std::pair<std::vector<std::string>,
+                                        std::vector<int64_t>>>
     BetaReduction(StrategyType strategy_type, size_t steps_limit = 200, size_t term_size_limit = 8048);
 
     std::string ExprToStringDB(const std::shared_ptr<TermNode> &from);
