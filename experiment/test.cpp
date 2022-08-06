@@ -22,7 +22,7 @@ void Reduction(std::ofstream &file_norm, std::ofstream &file_val, std::ofstream 
     file_name << term_size << "," << term_num << ",";
 
 
-    auto reductions_norm = tree_norm.BetaReduction(
+    auto reductions_norm = tree.BetaReduction(
             StrategyType::kNormal, term_size * 15, limit);
 
     if (reductions_norm.first != NormalFormType::kExisting) {
@@ -269,7 +269,10 @@ void ArticleAverageReductionChainLength(const std::filesystem::path &path_norm,
         for (int64_t term_num = terms_generator.GetCount(term_size - 1, 1) + 1;
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
-
+            if (term_num == 578	) {
+                std::cout<<"KEK"<<std::endl;
+                int kok = 0;
+            }
             Reduction(file_norm, file_val, file_name, term_size, term_num, limits[term_size - 1]);
         }
     }
@@ -293,6 +296,10 @@ void ArticleCalculateRatiosOfNormalForms(const std::filesystem::path &path, size
         for (int64_t term_num = 1;
              term_num <= terms_generator.GetCount(term_size, 0);
              ++term_num) {
+            if (term_num == 578	) {
+                std::cout<<"KEK"<<std::endl;
+                int kok = 0;
+            }
             auto tree = terms_generator.GenerateTerm(term_size, 0, term_num);
             auto reductions = tree.BetaReduction(StrategyType::kNormal, term_size * 15, limits[term_size - 1]);
             file << term_size << "," << term_num << ",";
@@ -337,7 +344,7 @@ int main() {
 
     std::filesystem::path base_path{"/home/ogrob/oganyan_diploma/Diploma/experiment/article"};
 
-    ArticleCalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv", 10);
+    ArticleCalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv", 5);
     std::cout<<"Exp 1 done"<<std::endl;
 
     ArticleAverageReductionChainLength(base_path / "normal_strat.csv",

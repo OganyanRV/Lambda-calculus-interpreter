@@ -511,7 +511,7 @@ void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_no
         auto cur_source_node = std::static_pointer_cast<Abs>(from);
 
         cur_copy_node->SetParent(parent);
-        cur_copy_node->SetDown(std::shared_ptr<TermNode>(cur_source_node->GetDown()));
+        cur_copy_node->SetDown(std::make_shared<TermNode>(cur_source_node->GetDown()->GetTerm()));
         cur_copy_node->GetDown()->SetParent(cur_copy_node);
         CopySubTreeRecursive(cur_copy_node->GetDown(), cur_source_node->GetDown());
     } else if (from->GetType() == TermType::kApp) {
@@ -521,8 +521,8 @@ void AbstractSyntaxTree::CopySubTreeRecursive(std::shared_ptr<TermNode> &copy_no
         auto cur_source_node = std::static_pointer_cast<App>(from);
 
         cur_copy_node->SetParent(parent);
-        cur_copy_node->SetLeft(std::shared_ptr<TermNode>(cur_source_node->GetLeft()));
-        cur_copy_node->SetRight(std::shared_ptr<TermNode>(cur_source_node->GetRight()));
+        cur_copy_node->SetLeft(std::make_shared<TermNode>(cur_source_node->GetLeft()->GetChildType(), cur_source_node->GetLeft()->GetTerm()));
+        cur_copy_node->SetRight(std::make_shared<TermNode>(cur_source_node->GetRight()->GetChildType(), cur_source_node->GetRight()->GetTerm()));
         cur_copy_node->GetLeft()->SetParent(cur_copy_node);
         cur_copy_node->GetRight()->SetParent(cur_copy_node);
         CopySubTreeRecursive(cur_copy_node->GetLeft(), cur_source_node->GetLeft());
