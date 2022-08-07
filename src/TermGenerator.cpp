@@ -90,6 +90,7 @@ std::shared_ptr<TermNode> TermGenerator::AppTerm(size_t max_free_var_cnt, size_t
 
         app->SetLeft(left_term);
         app->SetRight(right_term);
+        app->SetParent(from);
         left_term->SetChildType(ChildType::kLeft);
         right_term->SetChildType(ChildType::kRight);
         return app;
