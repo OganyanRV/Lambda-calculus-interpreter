@@ -337,8 +337,8 @@ int main() {
 
     std::filesystem::path base_path{"/home/ogrob/oganyan_diploma/Diploma/experiment/article"};
 
-    ArticleCalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv", 10);
-    std::cout<<"Exp 1 done"<<std::endl;
+//    ArticleCalculateRatiosOfNormalForms(base_path / "normal_form_ratios.csv", 10);
+//    std::cout<<"Exp 1 done"<<std::endl;
 
     ArticleAverageReductionChainLength(base_path / "normal_strat.csv",
                                        base_path / "call_by_value.csv",

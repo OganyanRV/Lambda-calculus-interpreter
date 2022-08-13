@@ -10,7 +10,10 @@ The lambda calculus interpreter has such functions:
 3. Replacing combinators with their representation in terms.
 4. Doing beta-reduction procedure to the input term in different reduction strategies (normal strategy, call by name, call by value).
 
-Also I did some experiments on all possible lambda terms and wrote the paper ["Analysis of normal forms in lambda calculus"](https://medium.com/@Robasti/analysis-of-normal-forms-in-lambda-calculus-2de201df933d) about that.
+Also I did some experiments on all possible closed lambda terms and wrote the papers  about that:
+
+1. ["Analysis of normal forms in lambda calculus"](https://medium.com/@Robasti/analysis-of-normal-forms-in-lambda-calculus-2de201df933d) 
+2. ["Comparison of different reduction (evaluation) strategies"](https://medium.com/@Robasti/comparison-of-different-reduction-evaluation-strategies-9c8933f9b882)
 
 Implemented with C++17, JetBrains Clion.
 
